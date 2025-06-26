@@ -8,6 +8,13 @@ import pandas as pd
 
 st.title("VFX ShotID Generator")
 
+st.info(
+    "HOW TO: Add locators to every possible vfx shot. The first shot of every scene, or where a change is needed gets a number followed by a dash and a space, eg.:\n"
+    "001 -\n"
+    "002 -\n"
+    "003 -\n"
+    "Export the marker list as txt and import in this app.  Happy marking!"
+)
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
 showcode = st.text_input("SHOWCODE (3 characters):", value="ABC", max_chars=3).upper()
