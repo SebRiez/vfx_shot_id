@@ -1,8 +1,10 @@
 # Program to create VFX ShotIDs from Marker text file
 # made by Seb Riezler
+# Program to create VFX ShotIDs from Marker text file
+# made by Seb Riezler
+
 import streamlit as st
 import re
-import io
 import os
 import pandas as pd
 
@@ -24,13 +26,14 @@ All locators in between do not need a comment.
     003 -  
     .
     .
-    
 
 Export the marker list as txt and import in this app.  Happy marking!
 """)
 
+# Upload input file
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
+# Input fields
 showcode = st.text_input("SHOWCODE (3 characters):", value="ABC", max_chars=3).upper()
 
 # Episoden-Schalter
@@ -39,8 +42,13 @@ episode = ""
 if use_episode:
     episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper()
 
-step_size = st.number_input("Increments (freely adjustable)", min_value=1, value=1, step=1)
+# User-Wert für erste Spalte
+user_value = st.text_input("Replace value in first column (optional):", value="")
 
+# Schrittgröße (Inkremente)
+step_size = st.number_input("Increments (freely adjustable)", min_value=1, value=10, step=1)
+
+# Wenn Datei hochgeladen wurde
 if uploaded_file:
     content = uploaded_file.read().decode("utf-8")
     filename = uploaded_file.name
@@ -50,6 +58,7 @@ if uploaded_file:
     marker_codes = []
     last_seen_marker = ""
 
+    # Einlesen & Marker erkennen
     for line in lines:
         fields = line.strip().split("\t")
         original_lines.append(fields)
@@ -63,6 +72,7 @@ if uploaded_file:
         else:
             marker_codes.append("")
 
+    # ShotIDs erzeugen
     grouped = {}
     labeled_codes = []
 
@@ -80,22 +90,34 @@ if uploaded_file:
         labeled_codes.append(label)
         grouped[marker] += step_size
 
-    # Display original preview
+    # Originalvorschau
     st.subheader("Original File Preview")
     st.dataframe(original_lines[:50], use_container_width=True)
 
-    # Prepare modified preview
+    # Verarbeitete Vorschau erstellen
     preview_lines = []
     for i, fields in enumerate(original_lines):
         new_fields = fields[:]
+
+        # Sicherstellen, dass Spalte 0 existiert
+        while len(new_fields) < 1:
+            new_fields.append("")
+
+        # Optional Spalte 0 ersetzen
+        if user_value:
+            new_fields[0] = user_value
+
+        # Sicherstellen, dass mindestens 7 Spalten vorhanden sind
         while len(new_fields) < 7:
             new_fields.append("")
+
+        # ShotID in Spalte 4 schreiben
         new_fields[4] = labeled_codes[i] or new_fields[4]
         preview_lines.append(new_fields)
 
     st.write(f"Total lines: {len(preview_lines)}")
 
-    # DataFrame for styling
+    # Vorschau als DataFrame für Darstellung
     df = pd.DataFrame(preview_lines[:50])
 
     def highlight_marker_column(val, col_index):
@@ -104,11 +126,13 @@ if uploaded_file:
         return ''
 
     styled_df = df.style.apply(lambda row: [highlight_marker_column(val, i) for i, val in enumerate(row)], axis=1)
+
     st.subheader("Processed File Preview (highlighted changes)")
     st.dataframe(styled_df, use_container_width=True)
 
-    # Prepare download
+    # Datei zum Download vorbereiten
     output_lines = ["\t".join(fields) for fields in preview_lines]
     output_str = "\n".join(output_lines)
     download_filename = f"{base_filename}_processed.txt"
+
     st.download_button("Save as .txt", output_str, file_name=download_filename, mime="text/plain")
