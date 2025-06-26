@@ -39,7 +39,7 @@ episode = ""
 if use_episode:
     episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper()
 
-step_size = st.number_input("Increments", min_value=1, value=10, step=1)
+step_size = st.number_input("Increments (freely adjustable)", min_value=1, value=1, step=1)
 
 if uploaded_file:
     content = uploaded_file.read().decode("utf-8")
