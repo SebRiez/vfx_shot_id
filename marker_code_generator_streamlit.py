@@ -1,5 +1,5 @@
-# Programm um VXX Shot MarkerIds zu erstellen
-# vom Sebbu
+# Program to create VFX ShotIDs from Marker text file
+# made by Seb Riezler
 import streamlit as st
 import re
 import io
@@ -10,7 +10,7 @@ st.title("VFX ShotID Generator")
 
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
-showcode = st.text_input("SHOWCODE (3 letters):", value="ABC", max_chars=3).upper()
+showcode = st.text_input("SHOWCODE (3 characters):", value="ABC", max_chars=3).upper()
 step_size = st.number_input("Increments", min_value=1, value=10, step=1)
 
 if uploaded_file:
