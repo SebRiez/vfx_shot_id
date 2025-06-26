@@ -1,4 +1,5 @@
-
+# Programm um VXX Shot MarkerIds zu erstellen
+# vom Sebbu
 import streamlit as st
 import re
 import io
