@@ -46,7 +46,7 @@ if use_episode:
     episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper()
 
 # User-Wert für erste Spalte
-user_value = st.text_input("Replace value in first column (optional):", value="")
+user_value = st.text_input("Replace username (optional):", value="")
 
 # Schrittgröße (Inkremente)
 step_size = st.number_input("Increments (freely adjustable)", min_value=1, value=10, step=1)
