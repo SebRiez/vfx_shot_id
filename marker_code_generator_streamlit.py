@@ -11,6 +11,13 @@ st.title("VFX ShotID Generator")
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
 showcode = st.text_input("SHOWCODE (3 characters):", value="ABC", max_chars=3).upper()
+
+# Episoden-Schalter
+use_episode = st.checkbox("Add EPISODE code to ShotID")
+episode = ""
+if use_episode:
+    episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper()
+
 step_size = st.number_input("Increments", min_value=1, value=10, step=1)
 
 if uploaded_file:
@@ -45,7 +52,10 @@ if uploaded_file:
         if marker not in grouped:
             grouped[marker] = step_size
         counter = grouped[marker]
-        label = f"{showcode}_{marker}_{str(counter).zfill(4)}"
+        if use_episode:
+            label = f"{showcode}_{episode}_{marker}_{str(counter).zfill(4)}"
+        else:
+            label = f"{showcode}_{marker}_{str(counter).zfill(4)}"
         labeled_codes.append(label)
         grouped[marker] += step_size
 
