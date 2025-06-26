@@ -6,7 +6,7 @@ import io
 import os
 import pandas as pd
 
-st.title("Marker Code Generator")
+st.title("VFX ShotID Generator")
 
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
