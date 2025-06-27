@@ -1,8 +1,12 @@
 # Program to create VFX ShotIDs from Marker text file
 # made by Seb Riezler
+# Program to create VFX ShotIDs from Marker text file
+# made by Seb Riezler
+
+# Program to create VFX ShotIDs from Marker text file
+# made by Seb Riezler
 
 import streamlit as st
-import streamlit.components.v1 as components
 import re
 import os
 import pandas as pd
@@ -33,7 +37,7 @@ Export the marker list as txt and import in this app.  Happy marking!
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
 # Input fields
-showcode = st.text_input("SHOWCODE (3 chars):", value="ABC", max_chars=3).upper()
+showcode = st.text_input("SHOWCODE (3 chars):", value="", max_chars=3).upper()
 
 # Episoden-Schalter
 use_episode = st.checkbox("add EPISODE code to ShotID")
@@ -65,7 +69,7 @@ if uploaded_file:
         fields = line.strip().split("\t")
         original_lines.append(fields)
         marker_field = fields[4].strip() if len(fields) > 4 else ""
-        match = re.match(r"^(\d{{3}})\s*-", marker_field)
+        match = re.match(r"^(\d{3})\s*-", marker_field)
         if match:
             last_seen_marker = match.group(1)
             marker_codes.append(last_seen_marker)
@@ -92,7 +96,11 @@ if uploaded_file:
         labeled_codes.append(label)
         grouped[marker] += step_size
 
-    # Vorschau vorbereiten
+    # Originalvorschau
+    st.subheader("Original File Preview")
+    st.dataframe(original_lines[:50], use_container_width=True)
+
+    # Verarbeitete Vorschau erstellen
     preview_lines = []
     for i, fields in enumerate(original_lines):
         new_fields = fields[:]
@@ -115,72 +123,18 @@ if uploaded_file:
 
     st.write(f"Total lines: {len(preview_lines)}")
 
-    # Vorschauen (z. B. erste 50 Zeilen)
-    max_columns = 10
+    # Vorschau als DataFrame für Darstellung
+    df = pd.DataFrame(preview_lines[:50])
 
-    def pad_row(row, length):
-        return row + [""] * (length - len(row))
+    def highlight_marker_column(val, col_index):
+        if col_index == 4:
+            return 'background-color: #d0ebff; color: black'
+        return ''
 
-    original_preview = [pad_row(row, max_columns) for row in original_lines[:50]]
-    processed_preview = [pad_row(row, max_columns) for row in preview_lines[:50]]
+    styled_df = df.style.apply(lambda row: [highlight_marker_column(val, i) for i, val in enumerate(row)], axis=1)
 
-    original_df = pd.DataFrame(original_preview, columns=[f"Col {i}" for i in range(1, max_columns + 1)])
-    processed_df = pd.DataFrame(processed_preview, columns=[f"Col {i}" for i in range(1, max_columns + 1)])
-
-    styled_processed_df = processed_df.style.apply(
-        lambda row: ['background-color: #d0ebff; color: black' if i == 4 else '' for i in range(len(row))],
-        axis=1
-    )
-
-    original_html = original_df.to_html(index=False, escape=False)
-    processed_html = styled_processed_df.to_html(index=False, escape=False)
-
-    combined_html = f"""
-    <style>
-    .scroll-table {{
-        overflow-x: auto;
-        overflow-y: scroll;
-        height: 500px;
-        width: 100%;
-    }}
-    .table-wrapper {{
-        display: flex;
-        gap: 20px;
-    }}
-    .table-wrapper table {{
-        font-size: 12px;
-        min-width: 500px;
-        border-collapse: collapse;
-    }}
-    th, td {{
-        padding: 4px;
-        border: 1px solid #ccc;
-    }}
-    </style>
-
-    <div class="table-wrapper">
-        <div class="scroll-table" id="table1">{original_html}</div>
-        <div class="scroll-table" id="table2">{processed_html}</div>
-    </div>
-
-    <script>
-    const t1 = document.getElementById('table1');
-    const t2 = document.getElementById('table2');
-    let isSyncing = false;
-    function syncScroll(source, target) {{
-        if (!isSyncing) {{
-            isSyncing = true;
-            target.scrollTop = source.scrollTop;
-            setTimeout(() => isSyncing = false, 20);
-        }}
-    }}
-    t1.onscroll = () => syncScroll(t1, t2);
-    t2.onscroll = () => syncScroll(t2, t1);
-    </script>
-    """
-
-    st.subheader("Preview: Original vs. Processed (synchronized)")
-    components.html(combined_html, height=520, scrolling=False)
+    st.subheader("Processed File Preview (highlighted changes)")
+    st.dataframe(styled_df, use_container_width=True)
 
     # Datei zum Download vorbereiten
     output_lines = ["\t".join(fields) for fields in preview_lines]
