@@ -65,7 +65,7 @@ if uploaded_file:
         fields = line.strip().split("\t")
         original_lines.append(fields)
         marker_field = fields[4].strip() if len(fields) > 4 else ""
-        match = re.match(r"^(\d{3})\s*-", marker_field)
+        match = re.match(r"^(\d{{3}})\s*-", marker_field)
         if match:
             last_seen_marker = match.group(1)
             marker_codes.append(last_seen_marker)
@@ -115,18 +115,26 @@ if uploaded_file:
 
     st.write(f"Total lines: {len(preview_lines)}")
 
-    # Vorschauen (50 Zeilen) als DataFrames
-    original_df = pd.DataFrame(original_lines[:50])
-    processed_df = pd.DataFrame(preview_lines[:50])
+    # Vorschauen (z. B. erste 50 Zeilen)
+    max_columns = 10
 
-    # HTML-Tabellen
-    original_html = original_df.to_html(index=False, escape=False)
-    processed_html = processed_df.style.apply(
+    def pad_row(row, length):
+        return row + [""] * (length - len(row))
+
+    original_preview = [pad_row(row, max_columns) for row in original_lines[:50]]
+    processed_preview = [pad_row(row, max_columns) for row in preview_lines[:50]]
+
+    original_df = pd.DataFrame(original_preview, columns=[f"Col {i}" for i in range(1, max_columns + 1)])
+    processed_df = pd.DataFrame(processed_preview, columns=[f"Col {i}" for i in range(1, max_columns + 1)])
+
+    styled_processed_df = processed_df.style.apply(
         lambda row: ['background-color: #d0ebff; color: black' if i == 4 else '' for i in range(len(row))],
         axis=1
-    ).to_html(index=False, escape=False)
+    )
 
-    # HTML + CSS + JS für synchrone Scrollanzeige
+    original_html = original_df.to_html(index=False, escape=False)
+    processed_html = styled_processed_df.to_html(index=False, escape=False)
+
     combined_html = f"""
     <style>
     .scroll-table {{
@@ -141,7 +149,7 @@ if uploaded_file:
     }}
     .table-wrapper table {{
         font-size: 12px;
-        min-width: 400px;
+        min-width: 500px;
         border-collapse: collapse;
     }}
     th, td {{
