@@ -96,45 +96,69 @@ if uploaded_file:
         labeled_codes.append(label)
         grouped[marker] += step_size
 
-    # Originalvorschau
-    st.subheader("Original File Preview")
-    st.dataframe(original_lines[:50], use_container_width=True)
+    import streamlit.components.v1 as components
 
-    # Verarbeitete Vorschau erstellen
-    preview_lines = []
-    for i, fields in enumerate(original_lines):
-        new_fields = fields[:]
+st.subheader("Preview: Original vs. Processed")
 
-        # Sicherstellen, dass Spalte 0 existiert
-        while len(new_fields) < 1:
-            new_fields.append("")
+# DataFrames erstellen
+original_df = pd.DataFrame(original_lines[:50])
+processed_df = pd.DataFrame(preview_lines[:50])
 
-        # Optional Spalte 0 ersetzen
-        if user_value:
-            new_fields[0] = user_value
+# Tabellen in HTML mit Scroll-Synchronisation
+original_html = original_df.to_html(index=False)
+processed_html = pd.DataFrame(preview_lines[:50]).style.apply(
+    lambda row: ['background-color: #d0ebff; color: black' if i == 4 else '' for i in range(len(row))],
+    axis=1
+).to_html(index=False)
 
-        # Sicherstellen, dass mindestens 7 Spalten vorhanden sind
-        while len(new_fields) < 7:
-            new_fields.append("")
+# Kombinierte HTML mit synchronem Scrollen
+combined_html = f"""
+<style>
+.scroll-table {{
+    overflow-x: auto;
+    overflow-y: scroll;
+    height: 500px;
+    width: 100%;
+}}
+.table-wrapper {{
+    display: flex;
+    gap: 20px;
+}}
+.table-wrapper table {{
+    font-size: 12px;
+    min-width: 400px;
+    border-collapse: collapse;
+}}
+th, td {{
+    padding: 4px;
+    border: 1px solid #ccc;
+}}
+</style>
 
-        # ShotID in Spalte 4 schreiben
-        new_fields[4] = labeled_codes[i] or new_fields[4]
-        preview_lines.append(new_fields)
+<div class="table-wrapper">
+    <div class="scroll-table" id="table1">{original_html}</div>
+    <div class="scroll-table" id="table2">{processed_html}</div>
+</div>
 
-    st.write(f"Total lines: {len(preview_lines)}")
+<script>
+const t1 = document.getElementById('table1');
+const t2 = document.getElementById('table2');
+let isSyncing = false;
+function syncScroll(source, target) {{
+    if (!isSyncing) {{
+        isSyncing = true;
+        target.scrollTop = source.scrollTop;
+        setTimeout(() => isSyncing = false, 20);
+    }}
+}}
+t1.onscroll = () => syncScroll(t1, t2);
+t2.onscroll = () => syncScroll(t2, t1);
+</script>
+"""
 
-    # Vorschau als DataFrame für Darstellung
-    df = pd.DataFrame(preview_lines[:50])
+# Anzeigen
+components.html(combined_html, height=520, scrolling=False)
 
-    def highlight_marker_column(val, col_index):
-        if col_index == 4:
-            return 'background-color: #d0ebff; color: black'
-        return ''
-
-    styled_df = df.style.apply(lambda row: [highlight_marker_column(val, i) for i, val in enumerate(row)], axis=1)
-
-    st.subheader("Processed File Preview (highlighted changes)")
-    st.dataframe(styled_df, use_container_width=True)
 
     # Datei zum Download vorbereiten
     output_lines = ["\t".join(fields) for fields in preview_lines]
