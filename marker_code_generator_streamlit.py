@@ -33,7 +33,7 @@ Export the marker list as txt and import in this app.  Happy marking!
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
 # Input fields
-showcode = st.text_input("SHOWCODE (3 chars):", value="", max_chars=3).upper()
+showcode = st.text_input("SHOWCODE (3 chars):", value="ABC", max_chars=3).upper()
 
 # Episoden-Schalter
 use_episode = st.checkbox("add EPISODE code to ShotID")
