@@ -16,7 +16,7 @@ st.title("VFX ShotID Generator")
 st.info("""\
 HOW TO:
 
-Add markers to every possible VFX shot. The first shot of each scene or the shot where a change is required is given a MARKER COMMENT, consisting of a number followed by a hyphen.
+Add markers to every possible VFX shot. The first shot of each scene or the shot where a change of number is required is given a MARKER COMMENT, consisting of a number followed by a hyphen.
 
 All locators in between do not need a comment.
 
