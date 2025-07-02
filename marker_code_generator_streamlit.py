@@ -1,22 +1,19 @@
 # Program to create VFX ShotIDs from Marker text file
 # made by Seb Riezler
-# Program to create VFX ShotIDs from Marker text file
-# made by Seb Riezler
-
-# Program to create VFX ShotIDs from Marker text file
-# made by Seb Riezler
 
 import streamlit as st
 import re
 import os
 import pandas as pd
+from io import BytesIO
+from datetime import datetime
 
 st.title("VFX ShotID Generator")
 
 st.info("""\
 HOW TO:
 
-Add markers to every possible VFX shot. The first shot of each scene or the shot where a change of number is required is given a MARKER COMMENT, consisting of a number followed by a hyphen.
+Add markers to every possible VFX shot. The first shot of each scene or the shot where a change is required is given a MARKER COMMENT, consisting of a number followed by a hyphen.
 
 All locators in between do not need a comment.
 
@@ -33,112 +30,135 @@ All locators in between do not need a comment.
 Export the marker list as txt and import in this app.  Happy marking!
 """)
 
-# Upload input file
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
-# Input fields
-showcode = st.text_input("SHOWCODE (max 5 chars):", value="", max_chars=5).upper()
+showcode = st.text_input("SHOWCODE (max 5 characters):", value="ABC", max_chars=5).upper()
 
 # Episoden-Schalter
-use_episode = st.checkbox("add EPISODE code to ShotID")
+use_episode = st.checkbox("Add EPISODE code to ShotID")
 episode = ""
 if use_episode:
     episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper()
+    if episode and not re.match(r"^E\d{2}$", episode):
+        st.warning("Episode should be in format E01, E02, E03, etc.")
 
-# Username-Ersetzung (optional)
+# Username-Ersetzung
 replace_user = st.checkbox("Replace username")
 user_value = ""
 if replace_user:
-    user_value = st.text_input("Username (e.g., VFX-EDITOR):", value="").strip()
+    user_value = st.text_input("Username (e.g., LVB_Seb):", value="").strip()
 
-# Schrittgröße (Inkremente)
+# Schrittweite
 step_size = st.number_input("Increments (freely adjustable)", min_value=1, value=10, step=1)
 
-# Wenn Datei hochgeladen wurde
 if uploaded_file:
-    content = uploaded_file.read().decode("utf-8")
-    filename = uploaded_file.name
-    base_filename = os.path.splitext(filename)[0]
-    lines = content.split("\n")
-    original_lines = []
-    marker_codes = []
-    last_seen_marker = ""
+    try:
+        content = uploaded_file.read().decode("utf-8")
+    except UnicodeDecodeError:
+        st.error("Could not decode the file. Please make sure it is UTF-8 encoded.")
+    else:
+        filename = uploaded_file.name
+        base_filename = os.path.splitext(filename)[0]
+        lines = content.strip().split("\n")
+        original_lines = []
+        marker_codes = []
+        last_seen_marker = ""
 
-    # Einlesen & Marker erkennen
-    for line in lines:
-        fields = line.strip().split("\t")
-        original_lines.append(fields)
-        marker_field = fields[4].strip() if len(fields) > 4 else ""
-        match = re.match(r"^(\d{3})\s*-", marker_field)
-        if match:
-            last_seen_marker = match.group(1)
-            marker_codes.append(last_seen_marker)
-        elif last_seen_marker:
-            marker_codes.append(last_seen_marker)
-        else:
-            marker_codes.append("")
+        for line in lines:
+            fields = line.strip().split("\t")
+            if not fields or all(f.strip() == "" for f in fields):
+                continue  # skip empty lines
+            original_lines.append(fields)
+            marker_field = fields[4].strip() if len(fields) > 4 else ""
+            match = re.match(r"^(\d{3})\s*-", marker_field)
+            if match:
+                last_seen_marker = match.group(1)
+                marker_codes.append(last_seen_marker)
+            elif last_seen_marker:
+                marker_codes.append(last_seen_marker)
+            else:
+                marker_codes.append("")
 
-    # ShotIDs erzeugen
-    grouped = {}
-    labeled_codes = []
+        grouped = {}
+        labeled_codes = []
 
-    for marker in marker_codes:
-        if not marker:
-            labeled_codes.append("")
-            continue
-        if marker not in grouped:
-            grouped[marker] = step_size
-        counter = grouped[marker]
-        if use_episode:
-            label = f"{showcode}_{episode}_{marker}_{str(counter).zfill(4)}"
-        else:
-            label = f"{showcode}_{marker}_{str(counter).zfill(4)}"
-        labeled_codes.append(label)
-        grouped[marker] += step_size
+        for marker in marker_codes:
+            if not marker:
+                labeled_codes.append("")
+                continue
+            if marker not in grouped:
+                grouped[marker] = step_size
+            counter = grouped[marker]
+            if use_episode:
+                label = f"{showcode}_{episode}_{marker}_{str(counter).zfill(4)}"
+            else:
+                label = f"{showcode}_{marker}_{str(counter).zfill(4)}"
+            labeled_codes.append(label)
+            grouped[marker] += step_size
 
-    # Originalvorschau
-    st.subheader("Original File Preview")
-    st.dataframe(original_lines[:50], use_container_width=True)
+        # Vorschau vorbereiten
+        preview_lines = []
+        for i, fields in enumerate(original_lines):
+            new_fields = fields[:]
+            while len(new_fields) < 1:
+                new_fields.append("")
+            if user_value:
+                new_fields[0] = user_value
+            while len(new_fields) < 7:
+                new_fields.append("")
+            new_fields[4] = labeled_codes[i] or new_fields[4]
+            preview_lines.append(new_fields)
 
-    # Verarbeitete Vorschau erstellen
-    preview_lines = []
-    for i, fields in enumerate(original_lines):
-        new_fields = fields[:]
+        # Vorschau
+        st.subheader("Original File Preview")
+        st.dataframe(original_lines[:50], use_container_width=True)
 
-        # Sicherstellen, dass Spalte 0 existiert
-        while len(new_fields) < 1:
-            new_fields.append("")
+        st.subheader("Processed File Preview (highlighted changes)")
+        df = pd.DataFrame(preview_lines[:50])
 
-        # Optional Spalte 0 ersetzen
-        if user_value:
-            new_fields[0] = user_value
+        def highlight_marker_column(val, col_index):
+            if col_index == 4:
+                return 'background-color: #d0ebff; color: black'
+            return ''
 
-        # Sicherstellen, dass mindestens 7 Spalten vorhanden sind
-        while len(new_fields) < 7:
-            new_fields.append("")
+        styled_df = df.style.apply(lambda row: [highlight_marker_column(val, i) for i, val in enumerate(row)], axis=1)
+        st.dataframe(styled_df, use_container_width=True)
 
-        # ShotID in Spalte 4 schreiben
-        new_fields[4] = labeled_codes[i] or new_fields[4]
-        preview_lines.append(new_fields)
+        st.write(f"Total lines: {len(preview_lines)}")
 
-    st.write(f"Total lines: {len(preview_lines)}")
+        # Export
+        export_df = pd.DataFrame(preview_lines)
+        output_lines = ["\t".join(fields) for fields in preview_lines]
+        output_str = "\n".join(output_lines)
+        timestamp = datetime.now().strftime("%Y%m%d")
 
-    # Vorschau als DataFrame für Darstellung
-    df = pd.DataFrame(preview_lines[:50])
+        st.subheader("Export")
 
-    def highlight_marker_column(val, col_index):
-        if col_index == 4:
-            return 'background-color: #d0ebff; color: black'
-        return ''
+# Auswahlmenü
+export_format = st.selectbox("Choose export format:", [
+    "Plain Text (.txt)",
+    "CSV (comma-separated)",
+    "CSV (semicolon-separated)",
+    "Google Sheets (via CSV)",
+    "Apple Numbers (via CSV)"
+])
 
-    styled_df = df.style.apply(lambda row: [highlight_marker_column(val, i) for i, val in enumerate(row)], axis=1)
+# Daten vorbereiten
+export_df = pd.DataFrame(preview_lines)
+output_lines = ["\t".join(fields) for fields in preview_lines]
+output_str = "\n".join(output_lines)
+timestamp = datetime.now().strftime("%Y%m%d")
+csv_comma = export_df.to_csv(index=False)
+csv_semicolon = export_df.to_csv(index=False, sep=";")
 
-    st.subheader("Processed File Preview (highlighted changes)")
-    st.dataframe(styled_df, use_container_width=True)
-
-    # Datei zum Download vorbereiten
-    output_lines = ["\t".join(fields) for fields in preview_lines]
-    output_str = "\n".join(output_lines)
-    download_filename = f"{base_filename}_processed.txt"
-
-    st.download_button("Save as .txt", output_str, file_name=download_filename, mime="text/plain")
+# Dynamischer Download basierend auf Auswahl
+if export_format == "Plain Text (.txt)":
+    st.download_button("Export", output_str, file_name=f"{base_filename}_{timestamp}.txt", mime="text/plain")
+elif export_format == "CSV (comma-separated)":
+    st.download_button("Export", csv_comma, file_name=f"{base_filename}_{timestamp}.csv", mime="text/csv")
+elif export_format == "CSV (semicolon-separated)":
+    st.download_button("Export", csv_semicolon, file_name=f"{base_filename}_semicolon_{timestamp}.csv", mime="text/csv")
+elif export_format == "Google Sheets (via CSV)":
+    st.download_button("Export", csv_comma, file_name=f"{base_filename}_GSheets_{timestamp}.csv", mime="text/csv")
+elif export_format == "Apple Numbers (via CSV)":
+    st.download_button("Export", csv_semicolon, file_name=f"{base_filename}_Numbers_{timestamp}.csv", mime="text/csv")
