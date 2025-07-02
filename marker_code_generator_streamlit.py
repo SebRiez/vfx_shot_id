@@ -32,6 +32,14 @@ Export the marker list as txt and import in this app.  Happy marking!
 
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
+if not uploaded_file:
+    st.markdown(
+        '<div style="background-color:#f1f1f1;padding:10px;border-radius:5px; color:#000;">'
+        '📁 <strong>Please upload a marker .txt file to begin.</strong>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    
 showcode = st.text_input("SHOWCODE (max 5 characters):", value="ABC", max_chars=5).upper()
 use_episode = st.checkbox("Add EPISODE code to ShotID")
 episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper() if use_episode else ""
@@ -131,6 +139,5 @@ if uploaded_file:
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
-else:
-    st.info("Please upload a .txt file to begin.")
+
 
