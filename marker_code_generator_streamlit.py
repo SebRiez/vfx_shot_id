@@ -10,6 +10,26 @@ from io import BytesIO
 
 st.title("VFX ShotID Generator")
 
+st.info("""\
+HOW TO:
+
+Add markers to every possible VFX shot. The first shot of each scene or the shot where a change is required is given a MARKER COMMENT, consisting of a number followed by a hyphen.
+
+All locators in between do not need a comment.
+
+    001 -  
+    . 
+    .
+    002 -  
+    .
+    .
+    003 -  
+    .
+    .
+
+Export the marker list as txt and import in this app.  Happy marking!
+""")
+
 uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
 
 showcode = st.text_input("SHOWCODE (max 5 characters):", value="ABC", max_chars=5).upper()
