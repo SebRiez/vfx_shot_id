@@ -1,53 +1,45 @@
-# Program to create VFX ShotIDs from Marker text file
-# made by Seb Riezler
+# VFX ShotID Generator
+# by Seb Riezler – verbessert für Avid-kompatiblen Export
 
 import streamlit as st
 import pandas as pd
 import re
 import os
 from datetime import datetime
-from io import BytesIO
 
-st.title("VFX ShotID Generator")
+st.title("🎬 VFX ShotID Generator")
 
 st.info("""\
-HOW TO:
+**HOW TO:**
 
-Add markers to every possible VFX shot. The first shot of each scene or the shot where a change is required is given a MARKER COMMENT, consisting of a number followed by a hyphen.
-
-All locators in between do not need a comment.
+1. In deiner Schnittsoftware jedem potenziellen VFX-Shot einen Marker geben.
+2. Der erste Marker eines Abschnitts erhält eine Zahl + Bindestrich als Kommentar:
 
     001 -  
-    . 
+    (Marker)
     .
     002 -  
-    .
-    .
-    003 -  
-    .
+    (Marker)
     .
 
-Export the marker list as txt and import in this app.  Happy marking!
+3. Exportiere die Marker als **tab-getrennte Textdatei** (.txt) und lade sie unten hoch.
 """)
 
-uploaded_file = st.file_uploader("Upload a tab-delimited text file (.txt)", type=["txt"])
+# File Upload
+uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)", type=["txt"])
 
-if not uploaded_file:
-    st.markdown(
-        '<div style="background-color:#f1f1f1;padding:10px;border-radius:5px; color:#000;">'
-        '📁 <strong>Please upload a marker .txt file to begin.</strong>'
-        '</div>',
-        unsafe_allow_html=True
-    )
-    
-showcode = st.text_input("SHOWCODE (max 5 characters):", value="ABC", max_chars=5).upper()
-use_episode = st.checkbox("Add EPISODE code to ShotID")
-episode = st.text_input("EPISODE (e.g., E01):", value="E01").upper() if use_episode else ""
+# ShotID Einstellungen
+showcode = st.text_input("🎬 SHOWCODE (max 5 characters):", value="MUM", max_chars=5).upper()
+use_episode = st.checkbox("🔢 Add EPISODE code to ShotID")
+episode = st.text_input("Episode (e.g., E01):", value="E01").upper() if use_episode else ""
 if use_episode and episode and not re.match(r"^E\d{2}$", episode):
-    st.warning("Episode should be in format E01, E02, etc.")
+    st.warning("⚠️ Episode should be in format E01, E02, etc.")
 
-replace_user = st.checkbox("Replace username")
-user_value = st.text_input("Username (e.g., LVB_Seb):", value="").strip() if replace_user else ""
+# Username Steuerung
+replace_user = st.checkbox("✏️ Replace username in column 1")
+user_value = st.text_input("Custom Username (e.g., VFX-EDITOR):", value="").strip() if replace_user else ""
+
+# Schrittweite
 step_size = st.number_input("Increments (freely adjustable)", min_value=1, value=10, step=1)
 
 if uploaded_file:
@@ -60,6 +52,7 @@ if uploaded_file:
         marker_codes = []
         last_seen_marker = ""
 
+        # Parsing der Originaldaten + Markerextraktion
         for line in lines:
             fields = line.strip().split("\t")
             if not fields or all(f.strip() == "" for f in fields):
@@ -75,6 +68,7 @@ if uploaded_file:
             else:
                 marker_codes.append("")
 
+        # ShotID-Generierung
         grouped = {}
         labeled_codes = []
 
@@ -85,31 +79,41 @@ if uploaded_file:
             if marker not in grouped:
                 grouped[marker] = step_size
             counter = grouped[marker]
-            label = f"{showcode}_{episode + '_' if use_episode else ''}{marker}_{str(counter).zfill(4)}"
-            labeled_codes.append(label)
+            shot_id = f"{showcode}_{episode + '_' if use_episode else ''}{marker}_{str(counter).zfill(4)}"
+            labeled_codes.append(shot_id)
             grouped[marker] += step_size
 
+        # Hilfsfunktion zur Längen-Sicherung
+        def ensure_length(lst, length):
+            return lst + [""] * (length - len(lst)) if len(lst) < length else lst[:length]
+
+        # Verarbeitete Zeilen bauen
         preview_lines = []
         for i, fields in enumerate(original_lines):
+            fields = ensure_length(fields, 8)
             new_fields = fields[:]
-            while len(new_fields) < 1:
-                new_fields.append("")
-            if user_value:
+
+            # Benutzername setzen (aus Feld oder ersetzt)
+            if replace_user and user_value:
                 new_fields[0] = user_value
-            while len(new_fields) < 7:
-                new_fields.append("")
-            new_fields[4] = labeled_codes[i] or new_fields[4]
+            else:
+                new_fields[0] = fields[0]
+
+            # ShotID einsetzen
+            if labeled_codes[i]:
+                new_fields[4] = labeled_codes[i]
+
             preview_lines.append(new_fields)
 
-        # Vorschau
-        st.subheader("Original File Preview")
+        # Vorschau anzeigen
+        st.subheader("📄 Original File Preview")
         st.dataframe(original_lines[:50], use_container_width=True)
 
-        st.subheader("Processed File Preview")
+        st.subheader("✅ Processed File Preview")
         st.dataframe(preview_lines[:50], use_container_width=True)
 
-        # Export Dropdown + Button
-        st.subheader("Export")
+        # Exportoptionen
+        st.subheader("⬇️ Export")
         export_format = st.selectbox("Choose export format:", [
             "Plain Text (.txt)",
             "CSV (comma-separated)",
@@ -125,19 +129,25 @@ if uploaded_file:
         csv_comma = export_df.to_csv(index=False)
         csv_semicolon = export_df.to_csv(index=False, sep=";")
 
+        export_filename = f"{base_filename}_{timestamp}"
+
         if export_format == "Plain Text (.txt)":
-            st.download_button("Export", output_str, file_name=f"{base_filename}_{timestamp}.txt", mime="text/plain")
+            st.download_button("📥 Download .txt", output_str, file_name=f"{export_filename}.txt", mime="text/plain")
         elif export_format == "CSV (comma-separated)":
-            st.download_button("Export", csv_comma, file_name=f"{base_filename}_{timestamp}.csv", mime="text/csv")
+            st.download_button("📥 Download CSV", csv_comma, file_name=f"{export_filename}.csv", mime="text/csv")
         elif export_format == "CSV (semicolon-separated)":
-            st.download_button("Export", csv_semicolon, file_name=f"{base_filename}_semicolon_{timestamp}.csv", mime="text/csv")
+            st.download_button("📥 Download CSV (;)", csv_semicolon, file_name=f"{export_filename}_semicolon.csv", mime="text/csv")
         elif export_format == "Google Sheets (via CSV)":
-            st.download_button("Export", csv_comma, file_name=f"{base_filename}_GSheets_{timestamp}.csv", mime="text/csv")
+            st.download_button("📥 Download GSheets CSV", csv_comma, file_name=f"{export_filename}_GSheets.csv", mime="text/csv")
         elif export_format == "Apple Numbers (via CSV)":
-            st.download_button("Export", csv_semicolon, file_name=f"{base_filename}_Numbers_{timestamp}.csv", mime="text/csv")
+            st.download_button("📥 Download Numbers CSV", csv_semicolon, file_name=f"{export_filename}_Numbers.csv", mime="text/csv")
 
     except Exception as e:
-        st.error(f"An error occurred: {e}")
-
-
-
+        st.error(f"❌ An error occurred: {e}")
+else:
+    st.markdown(
+        '<div style="background-color:#f1f1f1;padding:10px;border-radius:5px; color:#000;">'
+        '📁 <strong>Please upload a marker .txt file to begin.</strong>'
+        '</div>',
+        unsafe_allow_html=True
+    )
