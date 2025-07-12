@@ -12,8 +12,8 @@ st.title("🎬 VFX ShotID Generator")
 st.info("""\
 **HOW TO:**
 
-1. In deiner Schnittsoftware jedem potenziellen VFX-Shot einen Marker geben.
-2. Der erste Marker eines Abschnitts erhält eine Zahl + Bindestrich als Kommentar:
+1. In your editing software, add a marker to every potential VFX shot.
+2. The first marker of each section gets a comment with a number followed by a dash:
 
     001 -  
     (Marker)
@@ -21,8 +21,14 @@ st.info("""\
     002 -  
     (Marker)
     .
+    003 -  
+    (Marker)
+    .
+    .
+    .
+    .
 
-3. Exportiere die Marker als **tab-getrennte Textdatei** (.txt) und lade sie unten hoch.
+3. Export the markers as a **tab-delimited text file** (.txt) and upload it below.
 """)
 
 # File Upload
