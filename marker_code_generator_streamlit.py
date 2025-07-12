@@ -15,18 +15,19 @@ st.info("""\
 1. In your editing software, add a marker to every potential VFX shot.
 2. The first marker of each section gets a comment with a number followed by a dash:
 
-    001 -  
-    (Marker)
-    .
-    002 -  
-    (Marker)
-    .
-    003 -  
-    (Marker)
+    Marker Comment: 001 -  
     .
     .
     .
+    Marker Comment: 002 -  
     .
+    .
+    .
+    Marker Comment: 003 -  
+    .
+    .
+    .
+
 
 3. Export the markers as a **tab-delimited text file** (.txt) and upload it below.
 """)
