@@ -13,7 +13,7 @@ st.info("""\
 **HOW TO:**
 
 1. In your editing software, add a marker to every potential VFX shot.
-2. The first marker of each section gets a comment with a number followed by a dash:
+2. The first marker of each section/ scene gets a comment with a number followed by a dash:
 
     Marker Comment: 001 -  
     .
