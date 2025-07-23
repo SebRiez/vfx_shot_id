@@ -41,7 +41,7 @@ if use_episode and episode and not re.match(r"^E\d{2}$", episode):
     st.warning("⚠️ Episode should be in format E01, E02, etc.")
 
 # Username Steuerung
-replace_user = st.checkbox("✏️ Replace username in column 1")
+replace_user = st.checkbox("✏️ Replace username")
 user_value = st.text_input("Custom Username (e.g., VFX-EDITOR):", value="").strip() if replace_user else ""
 
 # Schrittweite
