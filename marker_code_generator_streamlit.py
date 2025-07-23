@@ -1,6 +1,7 @@
 # VFX ShotID Generator
 # by Seb Riezler – verbessert für Avid-kompatiblen Export
 
+from PIL import Image
 import streamlit as st
 import pandas as pd
 import re
@@ -9,7 +10,14 @@ from datetime import datetime
 
 st.title("🎬 VFX ShotID Generator")
 
-st.image("static/Marker_example_001.png", caption="HOW TO", use_container_width=True)
+img = Image.open("static/Marker_example_001.png")
+
+# 25 % der Originalgröße berechnen
+width, height = img.size
+new_size = (int(width * 0.25), int(height * 0.25))
+img_resized = img.resize(new_size)
+
+st.image(img_resized, caption="HOW TO")
 
 # File Upload
 uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)", type=["txt"])
