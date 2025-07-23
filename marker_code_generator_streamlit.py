@@ -10,14 +10,23 @@ from datetime import datetime
 
 st.title("🎬 VFX ShotID Generator")
 
-img = Image.open("static/Marker_example_001.png")
+# Bilder laden und ggf. skalieren
+img1 = Image.open("static/Marker_example_001.png")
+img2 = Image.open("static/Marker_example_002.png")
 
-# 25 % der Originalgröße berechnen
-width, height = img.size
-new_size = (int(width * 0.50), int(height * 0.50))
-img_resized = img.resize(new_size)
+# Optional: 50 % skalieren
+scale = 0.5
+img1 = img1.resize((int(img1.width * scale), int(img1.height * scale)))
+img2 = img2.resize((int(img2.width * scale), int(img2.height * scale)))
 
-st.image(img_resized, caption="HOW TO")
+# Zwei Spalten erzeugen
+col1, col2 = st.columns(2)
+
+with col1:
+    st.image(img1, caption="Schritt 1")
+
+with col2:
+    st.image(img2, caption="Schritt 2")
 
 # File Upload
 uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)", type=["txt"])
