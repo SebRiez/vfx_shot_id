@@ -8,7 +8,10 @@ import re
 import os
 from datetime import datetime
 
-st.title("🎬 VFX ShotID Generator")
+st.markdown(
+    "<h1 style='text-align: center;'>🎬 VFX ShotID Generator</h1>",
+    unsafe_allow_html=True
+)
 
 # Bilder laden und ggf. skalieren
 img1 = Image.open("static/Marker_example_001.png")
