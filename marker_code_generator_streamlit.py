@@ -23,10 +23,10 @@ img2 = img2.resize((int(img2.width * scale), int(img2.height * scale)))
 col1, col2 = st.columns(2)
 
 with col1:
-    st.image(img1, caption="Schritt 1")
+    st.image(img1, caption="before")
 
 with col2:
-    st.image(img2, caption="Schritt 2")
+    st.image(img2, caption="after")
 
 # File Upload
 uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)", type=["txt"])
