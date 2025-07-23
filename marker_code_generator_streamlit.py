@@ -35,7 +35,7 @@ uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)",
 
 # ShotID Einstellungen
 showcode = st.text_input("🎬 SHOWCODE (max 5 characters):", value="ABCDE", max_chars=5).upper()
-use_episode = st.checkbox("🔢 Add EPISODE code to ShotID (_ separated)")
+use_episode = st.checkbox("🔢 Add EPISODE code to ShotID (separated by _ )")
 episode = st.text_input("Episode (e.g., E01):", value="E01").upper() if use_episode else ""
 if use_episode and episode and not re.match(r"^E\d{2}$", episode):
     st.warning("⚠️ Episode should be in format E01, E02, etc.")
