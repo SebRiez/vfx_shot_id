@@ -137,7 +137,7 @@ if uploaded_file:
         csv_comma = export_df.to_csv(index=False)
         csv_semicolon = export_df.to_csv(index=False, sep=";")
 
-        export_filename = f"{base_filename}_{timestamp}"
+        export_filename = f"{base_filename}_processed_{timestamp}"
 
         if export_format == "Plain Text (.txt)":
             st.download_button("📥 Download .txt", output_str, file_name=f"{export_filename}.txt", mime="text/plain")
