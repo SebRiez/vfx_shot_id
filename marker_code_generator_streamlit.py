@@ -9,31 +9,7 @@ from datetime import datetime
 
 st.title("🎬 VFX ShotID Generator")
 
-st.info("""\
-**HOW TO:**
-
-1. In your editing software, add a marker to every potential VFX shot.
-2. The first marker of each section/ scene gets a comment with a number followed by a dash:
-
-    Marker Comment: 001 -  
-    .
-    .
-    .
-    
-    Marker Comment: 002 -  
-    .
-    .
-    .
-    
-    Marker Comment: 003 -  
-    .
-    .
-    .
-    
-
-
-3. Export the markers as a **tab-delimited text file** (.txt) and upload it below.
-""")
+MediaFileStorageError: Error opening 'static/Marker_example_001.png'
 
 # File Upload
 uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)", type=["txt"])
