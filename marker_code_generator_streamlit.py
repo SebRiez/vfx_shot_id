@@ -9,7 +9,7 @@ from datetime import datetime
 
 st.title("🎬 VFX ShotID Generator")
 
-MediaFileStorageError: Error opening 'static/Marker_example_001.png'
+st.image("static/Marker_example_001.png", caption="HOW TO", use_container_width=True)
 
 # File Upload
 uploaded_file = st.file_uploader("📁 Upload tab-delimited marker file (.txt)", type=["txt"])
