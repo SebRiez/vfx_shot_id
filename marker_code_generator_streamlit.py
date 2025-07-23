@@ -14,7 +14,7 @@ img = Image.open("static/Marker_example_001.png")
 
 # 25 % der Originalgröße berechnen
 width, height = img.size
-new_size = (int(width * 0.25), int(height * 0.25))
+new_size = (int(width * 0.50), int(height * 0.50))
 img_resized = img.resize(new_size)
 
 st.image(img_resized, caption="HOW TO")
