@@ -1,0 +1,4 @@
+streamlit
+pandas
+Pillow  # Falls Sie Bilder laden oder manipulieren
+# Fügen Sie hier weitere Bibliotheken hinzu, falls verwendet (z.B. numpy)
