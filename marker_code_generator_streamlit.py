@@ -10,44 +10,212 @@ from PIL import Image
 from xml.sax.saxutils import escape as xml_escape
 
 # ---------------------------------------------------------
-# CSS – Dark Mode + Glass Morphism Style
+# Page Configuration
+# ---------------------------------------------------------
+st.set_page_config(
+    page_title="VFX ShotID Generator",
+    page_icon="🎬",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ---------------------------------------------------------
+# CSS – Modern Dark Mode + Glassmorphism + Gradients
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    .stApp { background-color: #0b1121; color: #ffffff; }
+    /* Main background with gradient */
+    .stApp { 
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        color: #ffffff;
+    }
+    
+    /* Header styling */
+    .main-header {
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        padding: 2.5rem;
+        border-radius: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 60px rgba(6, 182, 212, 0.4);
+        text-align: center;
+    }
+    
+    .main-header h1 {
+        color: white;
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        letter-spacing: -0.5px;
+    }
+    
+    .main-header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        margin: 0.5rem 0 0 0;
+        font-weight: 300;
+    }
+    
+    /* Glass container styling */
     .glass-container {
-        background: rgba(30,41,59,0.5);
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Preview cards */
+    .preview-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
         backdrop-filter: blur(8px);
-        padding: 30px;
-        margin-bottom: 20px;
+        transition: all 0.3s ease;
     }
-    h1 {
-        color:#8be9fd;
-        text-shadow:0 0 5px rgba(139,233,253,0.5);
-        text-align:center;
+    
+    .preview-card:hover {
+        border-color: rgba(6, 182, 212, 0.5);
+        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.2);
+        transform: translateY(-2px);
     }
+    
+    /* Section headers */
+    h2, h3 {
+        color: #67e8f9 !important;
+        font-weight: 700 !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Input fields */
     div.stTextInput input, div.stNumberInput input {
-        background-color: rgba(45,62,80,0.8)!important;
-        border:1px solid #4a5568!important;
-        color:white!important;
+        background: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid rgba(100, 116, 139, 0.3) !important;
+        border-radius: 0.5rem !important;
+        color: white !important;
+        transition: all 0.3s ease !important;
     }
-    .stButton button, .stDownloadButton button {
-        background:#6272a4;
-        color:white;
-        border-radius:8px;
-        transition:0.2s;
-        border:none;
+    
+    div.stTextInput input:focus, div.stNumberInput input:focus {
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
     }
-    .stButton button:hover, .stDownloadButton button:hover {
-        background:#8be9fd;
-        color:#0b1121;
+    
+    /* Checkboxes */
+    .stCheckbox {
+        padding: 0.5rem;
     }
+    
+    /* Buttons - Primary */
+    .stButton button {
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%) !important;
+        color: white !important;
+        border-radius: 0.75rem !important;
+        transition: all 0.3s ease !important;
+        border: none !important;
+        font-weight: 600 !important;
+        padding: 0.75rem 1.5rem !important;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
+    }
+    
+    .stButton button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5) !important;
+    }
+    
+    /* Download buttons */
+    .stDownloadButton button {
+        background: rgba(6, 182, 212, 0.15) !important;
+        color: #67e8f9 !important;
+        border: 1px solid rgba(6, 182, 212, 0.3) !important;
+        border-radius: 0.75rem !important;
+        transition: all 0.3s ease !important;
+        font-weight: 600 !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+    
+    .stDownloadButton button:hover {
+        background: rgba(6, 182, 212, 0.25) !important;
+        border-color: #06b6d4 !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* File uploader */
+    .uploadedFile {
+        background: rgba(6, 182, 212, 0.1) !important;
+        border: 2px dashed rgba(6, 182, 212, 0.4) !important;
+        border-radius: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    div[data-testid="stFileUploader"] {
+        background: rgba(15, 23, 42, 0.6);
+        border: 2px dashed rgba(100, 116, 139, 0.3);
+        border-radius: 1rem;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    div[data-testid="stFileUploader"]:hover {
+        border-color: rgba(6, 182, 212, 0.5);
+        background: rgba(6, 182, 212, 0.05);
+    }
+    
+    /* Images */
     div[data-testid="stImage"] img {
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        border-radius: 1rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Dataframes */
+    .dataframe {
+        background: rgba(15, 23, 42, 0.8) !important;
+        border-radius: 0.75rem !important;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.5rem;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 0.5rem;
+        border-radius: 0.75rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        color: white !important;
+    }
+    
+    /* Info boxes */
+    .stAlert {
+        background: rgba(6, 182, 212, 0.1);
+        border-left: 4px solid #06b6d4;
+        border-radius: 0.75rem;
+        color: #67e8f9;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        margin: 2rem 0 !important;
+    }
+    
+    /* Labels */
+    label {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -69,54 +237,77 @@ for p in img_paths:
         images.append(None)
 
 # ---------------------------------------------------------
-# Main container
+# Header
+# ---------------------------------------------------------
+st.markdown("""
+<div class="main-header">
+    <h1>🎬 VFX ShotID Generator</h1>
+    <p>Convert marker files to organized shot IDs with professional precision</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# Preview Section
 # ---------------------------------------------------------
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
-st.markdown("<h1>🎬 VFX ShotID Generator</h1>", unsafe_allow_html=True)
 
-# Preview images
 col1, col2 = st.columns(2)
 with col1:
-    st.write("### Before")
+    st.markdown('<div class="preview-card">', unsafe_allow_html=True)
+    st.markdown("### ❌ Before")
     if images[0] is not None:
-        st.image(images[0])
+        st.image(images[0], use_container_width=True)
     else:
-        st.info("No image.")
+        st.info("Preview image not found")
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with col2:
-    st.write("### After")
+    st.markdown('<div class="preview-card">', unsafe_allow_html=True)
+    st.markdown("### ✅ After")
     if images[1] is not None:
-        st.image(images[1])
+        st.image(images[1], use_container_width=True)
     else:
-        st.info("No image.")
+        st.info("Preview image not found")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
-
-# ---------------------------------------------------------
-# Upload
-# ---------------------------------------------------------
-uploaded_file = st.file_uploader("📁 Upload Marker File (.txt or .xml)", type=["txt", "xml"])
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Settings
+# Upload Section
 # ---------------------------------------------------------
-st.subheader("⚙ Settings")
+st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+st.markdown("### 📁 Upload Marker File")
+uploaded_file = st.file_uploader(
+    "Choose a TXT or XML file",
+    type=["txt", "xml"],
+    help="Upload your marker file from your editing software"
+)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# Settings Section
+# ---------------------------------------------------------
+st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+st.markdown("### ⚙️ Settings")
 
 colA, colB = st.columns(2)
 with colA:
-    showcode = st.text_input("SHOWCODE (max 5 chars):", value="ABCDE", max_chars=5).upper()
+    showcode = st.text_input("🎯 SHOWCODE (max 5 chars):", value="ABCDE", max_chars=5).upper()
 with colB:
-    step_size = st.number_input("Increments (Step Size):", min_value=1, value=10, step=1)
+    step_size = st.number_input("📊 Increments (Step Size):", min_value=1, value=10, step=1)
 
 colC, colD = st.columns(2)
 with colC:
-    use_episode = st.checkbox("Add EPISODE code (E01)")
+    use_episode = st.checkbox("📺 Add EPISODE code (E01)")
     episode = st.text_input("Episode (e.g. E01):", value="E01").upper() if use_episode else ""
 
 with colD:
-    replace_user = st.checkbox("Replace username in column 1")
+    replace_user = st.checkbox("✏️ Replace username in column 1")
     user_value = st.text_input("Custom Username:", value="VFX_ARTIST").strip() if replace_user else ""
 
-timebase = st.number_input("Timebase for XML Export (fps)", min_value=1, value=24, step=1)
+timebase = st.number_input("🎞️ Timebase for XML Export (fps)", min_value=1, value=24, step=1)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # Helper: Timecode → Frames
@@ -282,6 +473,8 @@ def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_
 # MAIN PROCESSING
 # ---------------------------------------------------------
 if uploaded_file:
+    st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+    
     try:
         ext = os.path.splitext(uploaded_file.name)[1].lower()
         base_filename = os.path.splitext(uploaded_file.name)[0]
@@ -355,15 +548,15 @@ if uploaded_file:
         # ---------------------------------------------------------
         # PREVIEW + EXPORT
         # ---------------------------------------------------------
-        st.subheader("📊 Data Preview")
-        tab1, tab2 = st.tabs(["Original Data", "Processed Data"])
+        st.markdown("### 📊 Data Preview")
+        tab1, tab2 = st.tabs(["📋 Original Data", "✨ Processed Data"])
         with tab1:
-            st.dataframe(original_lines)
+            st.dataframe(original_lines, use_container_width=True)
         with tab2:
-            st.dataframe(preview_lines)
+            st.dataframe(preview_lines, use_container_width=True)
 
         st.markdown("---")
-        st.subheader("⬇️ Export")
+        st.markdown("### ⬇️ Export Options")
 
         df = pd.DataFrame(preview_lines)
         txt = "\n".join(["\t".join(r) for r in preview_lines])
@@ -376,13 +569,13 @@ if uploaded_file:
         col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
 
         with col_dl1:
-            st.download_button("📥 TXT", txt, file_name=f"{export_base}.txt")
+            st.download_button("📥 TXT", txt, file_name=f"{export_base}.txt", use_container_width=True)
 
         with col_dl2:
-            st.download_button("📥 CSV (,)", csv_c, file_name=f"{export_base}_comma.csv")
+            st.download_button("📥 CSV (,)", csv_c, file_name=f"{export_base}_comma.csv", use_container_width=True)
 
         with col_dl3:
-            st.download_button("📥 CSV (;)", csv_s, file_name=f"{export_base}_semicolon.csv")
+            st.download_button("📥 CSV (;)", csv_s, file_name=f"{export_base}_semicolon.csv", use_container_width=True)
 
         with col_dl4:
             xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base)
@@ -390,13 +583,18 @@ if uploaded_file:
                 "📥 Premiere XML",
                 xml_content,
                 file_name=f"{export_base}_PremiereMarkers.xml",
-                mime="application/xml"
+                mime="application/xml",
+                use_container_width=True
             )
+
+        st.success("✅ Processing complete! Download your files above.")
 
     except Exception as e:
         st.error(f"❌ Processing Error: {e}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    st.info("📁 Please upload a marker .txt or Premiere XML file to begin.")
-
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+    st.info("📤 Please upload a marker .txt or Premiere XML file to begin processing.")
+    st.markdown('</div>', unsafe_allow_html=True)
