@@ -229,7 +229,8 @@ for p in img_paths:
     if os.path.exists(p):
         try:
             img = Image.open(p)
-            img = img.resize((int(img.width * 0.5), int(img.height * 0.5)))
+            # Scale down to 30% of original size for better display
+            img = img.resize((int(img.width * 0.3), int(img.height * 0.3)), Image.Resampling.LANCZOS)
             images.append(img)
         except Exception:
             images.append(None)
