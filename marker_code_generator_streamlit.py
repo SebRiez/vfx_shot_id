@@ -15,7 +15,6 @@ from xml.sax.saxutils import escape as xml_escape
 st.set_page_config(
     page_title="VFX ShotID Generator",
     page_icon="🎬",
-    layout="wide",
     initial_sidebar_state="collapsed" # Sidebar ist nun wieder standardmäßig eingeklappt
 )
 
