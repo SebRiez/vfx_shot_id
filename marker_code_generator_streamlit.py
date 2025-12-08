@@ -30,10 +30,10 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* NEU: Begrenzung der maximalen Breite des Hauptinhalts */
+    /* ANGEPASST: Begrenzung der maximalen Breite des Hauptinhalts */
     .main {
-        max-width: 800px; /* Hier die gewünschte maximale Breite festlegen (z.B. 1000px, 1200px, etc.) */
-        padding: 0 3rem; /* Optional: Innenabstand links/rechts, falls nötig */
+        max-width: 900px; /* Reduziert von 1200px auf 900px für ein schmaleres Layout */
+        padding: 0 3rem; 
         margin-left: auto;
         margin-right: auto;
     }
@@ -270,8 +270,6 @@ with col1:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
     st.markdown("### ❌ Before")
     if images[0] is not None:
-        # GEÄNDERT: use_container_width=True entfernt und durch use_column_width=False ersetzt, 
-        # damit das CSS (max-width: 50%) greift.
         st.image(images[0], use_column_width=False)
     else:
         st.info("Preview image not found")
@@ -281,8 +279,6 @@ with col2:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
     st.markdown("### ✅ After")
     if images[1] is not None:
-        # GEÄNDERT: use_container_width=True entfernt und durch use_column_width=False ersetzt, 
-        # damit das CSS (max-width: 50%) greift.
         st.image(images[1], use_column_width=False)
     else:
         st.info("Preview image not found")
