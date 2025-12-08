@@ -32,7 +32,7 @@ st.markdown("""
 
     /* NEU: Begrenzung der maximalen Breite des Hauptinhalts */
     .main {
-        max-width: 1000px; /* Hier die gewünschte maximale Breite festlegen (z.B. 1000px, 1200px, etc.) */
+        max-width: 800px; /* Hier die gewünschte maximale Breite festlegen (z.B. 1000px, 1200px, etc.) */
         padding: 0 3rem; /* Optional: Innenabstand links/rechts, falls nötig */
         margin-left: auto;
         margin-right: auto;
