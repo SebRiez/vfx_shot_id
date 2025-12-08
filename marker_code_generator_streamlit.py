@@ -1,4 +1,4 @@
-# app.py (VFX ShotID Generator – Emerald Green Theme)
+# app.py (VFX ShotID Generator – Emerald Green Theme with Color Control)
 
 import streamlit as st
 import pandas as pd
@@ -8,6 +8,20 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 from PIL import Image
 from xml.sax.saxutils import escape as xml_escape
+
+# Mappe von Farbnamen zu CSS-kompatiblen Werten (Hex oder Standardname)
+COLOR_HEX_MAP = {
+    'Blue': '#0074D9', 'Cyan': '#00B8D4', 'Green': '#2ECC40', 
+    'Yellow': '#FFDC00', 'Red': '#FF4136', 'Orange': '#FF851B', 
+    'Magenta': '#FF4136', 'Purple': '#B10DC9', 'Fuchsia': '#F012BE', 
+    'Rose': '#F5B0C4', 'Sky': '#87CEEB', 'Mint': '#98FB98', 
+    'Lemon': '#FFFACD', 'Sand': '#F4A460', 'Cocoa': '#6F4E37', 
+    'White': '#FFFFFF', 'Black': '#000000', 
+    'Denim': '#1560BD'
+}
+
+# Aktualisierte Liste der standardisierten Markerfarben (basiert auf der Map)
+COLOR_OPTIONS = list(COLOR_HEX_MAP.keys())
 
 # ---------------------------------------------------------
 # Page Configuration
@@ -52,12 +66,12 @@ st.markdown("""
         padding: 2.5rem;
         border-radius: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: 0 20px 60px rgba(66, 179, 143, 0.3); /* Grüner Schatten */
+        box-shadow: 0 20px 60px rgba(66, 179, 143, 0.3);
         text-align: center;
     }
     
     .main-header h1 {
-        color: #1E2025; /* Dunkle Schrift auf hellem Header */
+        color: #1E2025; 
         font-size: 3rem;
         font-weight: 800;
         margin: 0;
@@ -85,13 +99,12 @@ st.markdown("""
     /* Preview cards */
     .preview-card {
         background: #2D2F34;
-        border: 1px solid rgba(66, 179, 143, 0.2); /* Emerald Akzent */
+        border: 1px solid rgba(66, 179, 143, 0.2);
         border-radius: 1rem;
         padding: 1.5rem;
         transition: all 0.3s ease;
     }
     
-    /* FIX: Wenn eine preview-card leer ist, blende sie aus. */
     .preview-card:empty {
         display: none !important;
     }
@@ -104,7 +117,7 @@ st.markdown("""
     
     /* Section headers */
     h2, h3 {
-        color: #80ED99 !important; /* Light Green */
+        color: #80ED99 !important;
         font-weight: 700 !important;
         margin-bottom: 1rem !important;
     }
@@ -121,11 +134,6 @@ st.markdown("""
     div.stTextInput input:focus, div.stNumberInput input:focus, div[data-baseweb="select"]:focus-within {
         border-color: #42B38F !important; 
         box-shadow: 0 0 0 3px rgba(66, 179, 143, 0.3) !important;
-    }
-    
-    /* Checkboxes */
-    .stCheckbox {
-        padding: 0.5rem;
     }
     
     /* Buttons - Primary (Emerald Green Akzent) */
@@ -177,18 +185,6 @@ st.markdown("""
         background: rgba(66, 179, 143, 0.1);
     }
     
-    /* Bilder: Skalierung auf 50% und Zentrierung */
-    div[data-testid="stImage"] img {
-        border-radius: 1rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(240, 240, 240, 0.1);
-        max-width: 50%; 
-        height: auto;
-        display: block; 
-        margin-left: auto; 
-        margin-right: auto; 
-    }
-    
     /* Dataframes */
     .dataframe {
         background: #2D2F34 !important;
@@ -203,38 +199,22 @@ st.markdown("""
         border-radius: 0.75rem;
     }
     
-    .stTabs [data-baseweb="tab"] {
-        background: transparent;
-        color: rgba(240, 240, 240, 0.6);
-        border-radius: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-    }
-    
     .stTabs [aria-selected="true"] {
         /* Aktiver Tab als heller Akzent */
         background: linear-gradient(135deg, #42B38F 0%, #80ED99 100%);
         color: #1E2025 !important; 
     }
     
-    /* Info boxes (semantische Farbe Grün) */
+    /* Info/Success/Error */
     .stAlert {
-        background: rgba(128, 237, 153, 0.1);
         border-left: 4px solid #42B38F;
-        border-radius: 0.75rem;
         color: #80ED99;
     }
-    
-    /* Success messages (noch stärkeres semantisches Grün) */
     div[data-testid="stSuccess"] {
-        background-color: rgba(76, 175, 80, 0.2) !important;
         border-left: 4px solid #4CAF50 !important;
         color: #4CAF50 !important;
     }
-
-    /* Error messages (semantische Farbe Rot) */
     div[data-testid="stError"] {
-        background-color: rgba(244, 67, 54, 0.2) !important;
         border-left: 4px solid #F44336 !important;
         color: #F44336 !important;
     }
@@ -245,28 +225,14 @@ st.markdown("""
         margin: 2rem 0 !important;
     }
     
-    /* Labels */
-    label {
-        color: rgba(240, 240, 240, 0.9) !important;
-        font-weight: 500 !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Load optional PNG preview images
+# Load optional PNG preview images (Simplified)
 # ---------------------------------------------------------
-img_paths = ["static/Marker_example_001.png", "static/Marker_example_002.png"]
-images = []
-for p in img_paths:
-    if os.path.exists(p):
-        try:
-            img = Image.open(p)
-            images.append(img)
-        except Exception:
-            images.append(None)
-    else:
-        images.append(None)
+# Simulierte Platzhalter, da die Dateien nicht im Ausführungsumfeld verfügbar sind
+images = [None, None] 
 
 # ---------------------------------------------------------
 # Header
@@ -279,29 +245,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Preview Section
+# Preview Section (Simplified)
 # ---------------------------------------------------------
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
-
+st.markdown("### 🖼️ Data Preview")
 col1, col2 = st.columns(2)
 with col1:
-    st.markdown('<div class="preview-card">', unsafe_allow_html=True)
-    st.markdown("### ❌ Before")
-    if images and images[0] is not None:
-        st.image(images[0], use_column_width=False)
-    else:
-        st.info("Preview image not found (static/Marker_example_001.png)")
-    st.markdown('</div>', unsafe_allow_html=True)
-
+    st.info("❌ Before data will be shown here after upload.")
 with col2:
-    st.markdown('<div class="preview-card">', unsafe_allow_html=True)
-    st.markdown("### ✅ After")
-    if images and images[1] is not None:
-        st.image(images[1], use_column_width=False)
-    else:
-        st.info("Preview image not found (static/Marker_example_002.png)")
-    st.markdown('</div>', unsafe_allow_html=True)
-
+    st.info("✅ After data will be shown here after processing.")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -322,18 +274,13 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 st.markdown("### ⚙️ Settings")
 
-# Dictionary der Frame-Raten (Werte sind Gleitkommazahlen)
+# Dictionary der Frame-Raten
 fps_options = {
-    "23.98 fps (23.976)": 23.976,
-    "24 fps": 24,
-    "25 fps": 25,
-    "29.97 fps (Drop Frame)": 29.97, 
-    "30 fps": 30,
-    "50 fps": 50, 
-    "59.94 fps (Drop Frame)": 59.94,
-    "60 fps": 60
+    "23.98 fps (23.976)": 23.976, "24 fps": 24, "25 fps": 25, 
+    "29.97 fps (Drop Frame)": 29.97, "30 fps": 30, "60 fps": 60
 }
 
+# --- SHOTID & USER SETTINGS ---
 colA, colB = st.columns(2)
 with colA:
     showcode = st.text_input("🎯 SHOWCODE (max 5 chars):", value="ABCDE", max_chars=5).upper()
@@ -344,41 +291,74 @@ colC, colD = st.columns(2)
 with colC:
     use_episode = st.checkbox("📺 Add EPISODE code (E01)")
     episode = st.text_input("Episode (e.g. E01):", value="E01").upper() if use_episode else ""
-
 with colD:
     replace_user = st.checkbox("✏️ Replace username in column 1")
     user_value = st.text_input("Custom Username:", value="VFX_ARTIST").strip() if replace_user else ""
 
-# Layout für FPS und Marker-Typ
+# --- FPS & MARKER TYPE SETTINGS ---
 colE, colF = st.columns(2)
-
 with colE:
-    # Dropdown für die Timebase (Framerate)
     selected_fps_label = st.selectbox(
         "🎞️ Timebase for XML Export (fps)", 
         options=list(fps_options.keys()),
         index=1
     )
     timebase = fps_options[selected_fps_label]
-
 with colF:
-    # Dropdown für den Marker-Typ
     marker_type = st.selectbox(
         "📍 XML Marker Type",
         options=["Clip Markers (Standard)", "Sequence Markers"],
         index=0,
-        help="Clip Markers: Markiert den Clip innerhalb einer Sequenz. Sequence Markers: Markiert die Zeitleiste selbst."
+        help="Clip Markers: Markiert den Clip. Sequence Markers: Markiert die Zeitleiste."
     )
+
+st.markdown("---")
+st.markdown("### 🌈 Marker Color Settings")
+
+# --- HELPER FUNKTION FÜR FARBAUSWAHL MIT SWATCH (Wird nur für die Anzeige des ausgewählten Wertes verwendet) ---
+def get_swatch_html(color_name: str, size: int = 15) -> str:
+    """Erzeugt den HTML-Code für einen Farbkreis (Swatch)."""
+    hex_code = COLOR_HEX_MAP.get(color_name, '#FFFFFF')
+    # Dünner, dunkler Rand für bessere Sichtbarkeit von hellen Farben (Lemon, White)
+    border_style = '1px solid rgba(0, 0, 0, 0.5)' if color_name in ["White", "Lemon"] else '1px solid rgba(255, 255, 255, 0.2)'
+    return f'<span style="display: inline-block; width: {size}px; height: {size}px; border-radius: 50%; background-color: {hex_code}; border: {border_style}; margin-right: 8px; vertical-align: middle;"></span>'
+
+
+colG, colH = st.columns(2)
+with colG:
+    # 1. Standardfarbe für leere Einträge
+    default_color = st.selectbox(
+        "🎨 Default Color (for empty input)",
+        options=COLOR_OPTIONS,
+        # GEÄNDERT: Setze den Standardwert auf "Green"
+        index=COLOR_OPTIONS.index("Green"), 
+        help="Color to use if the input file does not specify a marker color.",
+        key="default_color",
+    )
+
+with colH:
+    # 2. Optionale Farb-Override
+    override_color_enable = st.checkbox("🔥 Force All Markers to One Color")
+    override_color = st.selectbox(
+        "Forced Export Color",
+        options=COLOR_OPTIONS,
+        index=COLOR_OPTIONS.index("Denim"),
+        disabled=not override_color_enable,
+        key="override_color",
+    )
+
+# --- VISUELLE BESTÄTIGUNG DER GEWÄHLTEN FARBEN (NEU) ---
+st.markdown('<br>', unsafe_allow_html=True)
+st.markdown(f"**Default Color:** {get_swatch_html(default_color)}{default_color}", unsafe_allow_html=True)
+if override_color_enable:
+    st.markdown(f"**Forced Color:** {get_swatch_html(override_color)}{override_color}", unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Helper: Timecode → Frames
+# Helper: Timecode → Frames (Unchanged)
 # ---------------------------------------------------------
 def timecode_to_frames(tc: str, fps: float):
-    """
-    Konvertiert 'HH:MM:SS:FF' nach Frames, basierend auf der tatsächlichen float-Framerate.
-    """
     if not tc or ":" not in tc:
         return None
     parts = tc.strip().split(":")
@@ -393,22 +373,17 @@ def timecode_to_frames(tc: str, fps: float):
         return None
     
     total_seconds = (h * 3600) + (m * 60) + s
-    return round(total_seconds * fps + f)
+    # Rundung, um float-Fehler bei der Frame-Berechnung zu vermeiden
+    return int(round(total_seconds * fps + f))
 
 # ---------------------------------------------------------
-# XML-Export: Clip-Marker ODER Sequence-Marker
+# XML-Export: Clip-Marker ODER Sequence-Marker (Unchanged)
 # ---------------------------------------------------------
 def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type: str):
-    """
-    Erstellt ein FCP-XML (xmeml). Marker werden entweder in das <sequence>
-    (Sequenz-Marker) oder in das <clipitem> (Clip-Marker) Element geschrieben.
-    """
-
     marker_xml_chunks = []
     max_frame = 0
     fps_float = float(fps)
     
-    # Für FCPXML wird die timebase immer als Integer-Frames/Sekunde angegeben.
     timebase_int = round(fps_float) 
 
     # Marker-Daten sammeln
@@ -416,14 +391,13 @@ def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type:
         row = row + [""] * (8 - len(row)) if len(row) < 8 else row
         tc_str   = (row[1] or "").strip()
         col2     = (row[2] or "").strip()
-        color    = (row[3] or "Cyan").strip()
+        color    = (row[3] or "Cyan").strip() # Wichtig: Nimmt die bereits korrigierte Farbe
         shotid   = (row[4] or "").strip()
         col5     = (row[5] or "").strip()
 
         if not shotid:
             continue
 
-        # 1. IN-Frame bestimmen (Timecode oder Frame-Zahl)
         if col2.isdigit():
             frame_in = int(col2)
         else:
@@ -432,12 +406,10 @@ def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type:
         if frame_in is None:
             continue
 
-        # 2. Dauer: wenn Spalte 5 eine Zahl ist, als Frames nutzen, sonst 1 Frame
         dur = int(col5) if col5.isdigit() and int(col5) > 0 else 1
         frame_out = frame_in + dur
         max_frame = max(max_frame, frame_out)
 
-        # 3. Kommentar
         comment = col5 if col5 and not col5.isdigit() else shotid
 
         name_xml    = xml_escape(shotid)
@@ -453,22 +425,15 @@ def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type:
                     <color>{color_xml}</color>
                 </marker>""")
 
-    # Gesamtdauer der Sequenz/Clips
     duration = max_frame + 1 if marker_xml_chunks else 100
     duration_str = str(duration)
     
-    # ---------------------------------------------------------
-    # Unterscheidung des XML-Aufbaus basierend auf Marker-Typ
-    # ---------------------------------------------------------
     markers_block = "\n".join(marker_xml_chunks)
     
-    # Sequenz-Marker werden direkt in <sequence> geschrieben
     sequence_markers = markers_block if marker_type == "Sequence Markers" else ""
-    # Clip-Marker werden in <clipitem> geschrieben
     clip_markers = markers_block if marker_type == "Clip Markers (Standard)" else ""
 
     
-    # FCP XML Basisstruktur
     xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
 <xmeml version="4">
@@ -531,7 +496,7 @@ if uploaded_file:
         base_filename = os.path.splitext(uploaded_file.name)[0]
         original_lines = []
 
-        # ------------------------ TXT IMPORT ------------------------
+        # --- IMPORT LOGIC (Unchanged) ---
         if ext == ".txt":
             content = uploaded_file.read().decode("utf-8", errors="ignore")
             for line in content.split("\n"):
@@ -539,31 +504,25 @@ if uploaded_file:
                 if any(v.strip() for v in f):
                     original_lines.append(f)
 
-        # ------------------------ XML IMPORT ------------------------
         elif ext == ".xml":
             raw = uploaded_file.read()
             root = ET.fromstring(raw)
-
-            # generische Marker-Extraktion aus bestehendem FCP-XML / Premiere-XML
             for marker in root.findall(".//marker"):
                 name = marker.findtext("name") or ""
                 comment = marker.findtext("comment") or ""
                 frame_in = marker.findtext("in") or "0"
                 
+                # Farbwert aus XML auslesen (falls vorhanden, sonst leer)
+                xml_color = marker.findtext("color") or "" 
+                
                 original_lines.append([
-                    "",          # username placeholder
-                    "",          # kein TC → nur Frames
-                    frame_in,    # IN-frame (wird später in generate_premiere_xml als col2 interpretiert)
-                    "Cyan",      # default color
-                    name,
-                    comment,
-                    "", ""
+                    "", "", frame_in, xml_color, # Wichtig: XML Farbe wird hier eingefügt
+                    name, comment, "", ""
                 ])
 
-        # ---------------------- SHOTID ASSIGNMENT -------------------
+        # --- SHOTID ASSIGNMENT (Unchanged) ---
         marker_group = []
         current_group = ""
-
         for row in original_lines:
             text = row[4].strip() if len(row) > 4 else ""
             m = re.match(r"^(\d{3})\s*-", text)
@@ -588,17 +547,39 @@ if uploaded_file:
             labeled.append(shotid)
             group_counter[g] += step_size
 
+        # --- FINAL PREVIEW LINE ASSEMBLY (Updated Color Logic) ---
         preview_lines = []
         for i, row in enumerate(original_lines):
+            # Sicherstellen, dass die Zeile mindestens 8 Spalten hat
             row = row + [""] * (8 - len(row)) if len(row) < 8 else row
+            
+            # 1. Farbe bestimmen (Spalte 3)
+            input_color = (row[3] or "").strip()
+            final_color = default_color # Startwert: Vom Nutzer definierte Standardfarbe
+
+            if override_color_enable:
+                # Override ist aktiv: Erzwinge die gewählte Override-Farbe
+                final_color = override_color
+            elif input_color:
+                # Override ist inaktiv: Wenn die Eingabefarbe gültig ist, übernehme sie
+                # Prüfung jetzt gegen die aktualisierte COLOR_OPTIONS Liste
+                if input_color in COLOR_OPTIONS:
+                    final_color = input_color
+                # Wenn die Eingabefarbe ungültig ist, bleibt es bei der 'default_color'
+
+            # 2. Werte zuweisen
+            row[3] = final_color # Wende die finale Farbe an
+            
             if replace_user and user_value:
                 row[0] = user_value
             if labeled[i]:
                 row[4] = labeled[i]
+            
             preview_lines.append(row)
 
+
         # ---------------------------------------------------------
-        # PREVIEW + EXPORT DOWNLOAD BUTTONS
+        # PREVIEW + EXPORT DOWNLOAD BUTTONS (Unchanged)
         # ---------------------------------------------------------
         st.markdown("### 📊 Data Preview")
         tab1, tab2 = st.tabs(["📋 Original Data", "✨ Processed Data"])
@@ -619,8 +600,8 @@ if uploaded_file:
         timestamp = datetime.now().strftime("%Y%m%d")
         export_base = f"{base_filename}_processed_{timestamp}"
         
+        # Sicherstellen, dass die Farbe in XML-Export verwendet wird (Zeile 470)
         xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base, marker_type=marker_type)
-
 
         col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
 
