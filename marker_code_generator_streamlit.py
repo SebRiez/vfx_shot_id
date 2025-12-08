@@ -29,6 +29,14 @@ st.markdown("""
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
         color: #ffffff;
     }
+
+    /* NEU: Begrenzung der maximalen Breite des Hauptinhalts */
+    .main {
+        max-width: 1200px; /* Hier die gewünschte maximale Breite festlegen (z.B. 1000px, 1200px, etc.) */
+        padding: 0 3rem; /* Optional: Innenabstand links/rechts, falls nötig */
+        margin-left: auto;
+        margin-right: auto;
+    }
     
     /* Header styling */
     .main-header {
@@ -170,7 +178,7 @@ st.markdown("""
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
         
-        /* NEU: Bild auf 50% der Spaltenbreite begrenzen */
+        /* Bild auf 50% der Spaltenbreite begrenzen */
         max-width: 50%; 
         height: auto;
         display: block; 
