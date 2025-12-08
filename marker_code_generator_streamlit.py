@@ -301,6 +301,18 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 st.markdown("### ⚙️ Settings")
 
+# Dictionary der Frame-Raten (Werte sind Gleitkommazahlen)
+fps_options = {
+    "23.98 fps (23.976)": 23.976,
+    "24 fps": 24,
+    "25 fps": 25,
+    "29.97 fps (Drop Frame)": 29.97, # Hinweis: Streamlit speichert hier den numerischen Wert
+    "30 fps": 30,
+    "50 fps": 50, # 50 fps ist in Europa üblich
+    "59.94 fps (Drop Frame)": 59.94,
+    "60 fps": 60
+}
+
 colA, colB = st.columns(2)
 with colA:
     showcode = st.text_input("🎯 SHOWCODE (max 5 chars):", value="ABCDE", max_chars=5).upper()
@@ -316,7 +328,15 @@ with colD:
     replace_user = st.checkbox("✏️ Replace username in column 1")
     user_value = st.text_input("Custom Username:", value="VFX_ARTIST").strip() if replace_user else ""
 
-timebase = st.number_input("🎞️ Timebase for XML Export (fps)", min_value=1, value=24, step=1)
+# NEU: Dropdown für die Timebase (Framerate)
+selected_fps_label = st.selectbox(
+    "🎞️ Timebase for XML Export (fps)", 
+    options=list(fps_options.keys()), # Zeigt die Keys (Labels) an
+    index=1 # Wählt 24 fps als Standard (Index 1)
+)
+
+# NEU: Speichern des numerischen Wertes, der zum Export verwendet wird
+timebase = fps_options[selected_fps_label]
 
 st.markdown('</div>', unsafe_allow_html=True)
 
