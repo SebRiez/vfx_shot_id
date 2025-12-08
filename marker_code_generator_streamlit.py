@@ -1,4 +1,4 @@
-# app.py (VFX ShotID Generator – modern UI + Premiere Clip-Marker XML)
+# app.py (VFX ShotID Generator – Ocean Blue Serenity Theme)
 
 import streamlit as st
 import pandas as pd
@@ -15,25 +15,30 @@ from xml.sax.saxutils import escape as xml_escape
 st.set_page_config(
     page_title="VFX ShotID Generator",
     page_icon="🎬",
-    layout="centered",  # <--- HIER AUF "centered" UMGESTELLT FÜR SCHMÄLERE ANSICHT
+    layout="centered", 
     initial_sidebar_state="collapsed"
 )
 
 # ---------------------------------------------------------
-# CSS – Modern Dark Mode + Glassmorphism + Gradients
+# CSS – Ocean Blue Serenity Palette Integration
 # ---------------------------------------------------------
 st.markdown("""
 <style>
+    /* FARBPALETTE:
+     * Deep Twilight (Dunkel Basis): #03045eff 
+     * French Blue (Dunkel Akzent): #023e8aff
+     * Turquoise Surf (Akzent Hell): #00b4d8ff
+     * Sky Aqua (Highlight): #48cae4ff 
+    */
+
     /* Main background with gradient */
     .stApp { 
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        /* Verlauf: Deep Twilight -> French Blue -> Deep Twilight (dunkler, ruhiger Look) */
+        background: linear-gradient(135deg, #03045eff 0%, #023e8aff 50%, #03045eff 100%);
         color: #ffffff;
     }
 
-    /* Begrenzung der maximalen Breite des Hauptinhalts 
-       HINWEIS: Bei layout="centered" setzt Streamlit eine interne Obergrenze (~730px), 
-       die kleiner ist als die hier gesetzten 900px.
-    */
+    /* Begrenzung der maximalen Breite des Hauptinhalts */
     .main {
         max-width: 900px; 
         padding: 0 3rem; 
@@ -41,13 +46,13 @@ st.markdown("""
         margin-right: auto;
     }
     
-    /* Header styling */
+    /* Header styling (Gradient von Turquoise Surf zu Sky Aqua) */
     .main-header {
-        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #00b4d8ff 0%, #48cae4ff 100%);
         padding: 2.5rem;
         border-radius: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: 0 20px 60px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 20px 60px rgba(0, 180, 216, 0.3); /* Schatten in Türkis */
         text-align: center;
     }
     
@@ -67,9 +72,9 @@ st.markdown("""
         font-weight: 300;
     }
     
-    /* Glass container styling */
+    /* Glass container styling (Hintergrund bleibt dunkel transparent) */
     .glass-container {
-        background: rgba(30, 41, 59, 0.4);
+        background: rgba(3, 4, 94, 0.4); /* Leichter Deep Twilight Transparenz */
         border-radius: 1.5rem;
         border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -80,8 +85,8 @@ st.markdown("""
     
     /* Preview cards */
     .preview-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(6, 182, 212, 0.2);
+        background: rgba(3, 4, 94, 0.6);
+        border: 1px solid rgba(0, 180, 216, 0.2); /* Turquoise Surf Akzent */
         border-radius: 1rem;
         padding: 1.5rem;
         backdrop-filter: blur(8px);
@@ -94,30 +99,30 @@ st.markdown("""
     }
 
     .preview-card:hover {
-        border-color: rgba(6, 182, 212, 0.5);
-        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.2);
+        border-color: rgba(0, 180, 216, 0.5);
+        box-shadow: 0 8px 24px rgba(0, 180, 216, 0.2);
         transform: translateY(-2px);
     }
     
     /* Section headers */
     h2, h3 {
-        color: #67e8f9 !important;
+        color: #48cae4ff !important; /* Sky Aqua */
         font-weight: 700 !important;
         margin-bottom: 1rem !important;
     }
     
     /* Input fields */
     div.stTextInput input, div.stNumberInput input, div[data-baseweb="select"] {
-        background: rgba(15, 23, 42, 0.8) !important;
-        border: 1px solid rgba(100, 116, 139, 0.3) !important;
+        background: rgba(2, 62, 138, 0.8) !important; /* Dunkler French Blue */
+        border: 1px solid rgba(72, 202, 228, 0.3) !important; /* Sky Aqua Akzentlinie */
         border-radius: 0.5rem !important;
         color: white !important;
         transition: all 0.3s ease !important;
     }
     
     div.stTextInput input:focus, div.stNumberInput input:focus, div[data-baseweb="select"]:focus-within {
-        border-color: #06b6d4 !important;
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
+        border-color: #00b4d8ff !important; /* Turquoise Surf Fokus */
+        box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1) !important;
     }
     
     /* Checkboxes */
@@ -125,28 +130,28 @@ st.markdown("""
         padding: 0.5rem;
     }
     
-    /* Buttons - Primary */
+    /* Buttons - Primary (Gradient von Bright Teal Blue zu Turquoise Surf) */
     .stButton button {
-        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #0077b6ff 0%, #00b4d8ff 100%) !important;
         color: white !important;
         border-radius: 0.75rem !important;
         transition: all 0.3s ease !important;
         border: none !important;
         font-weight: 600 !important;
         padding: 0.75rem 1.5rem !important;
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
+        box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3) !important;
     }
     
     .stButton button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5) !important;
+        box-shadow: 0 8px 24px rgba(0, 119, 182, 0.5) !important;
     }
     
     /* Download buttons */
     .stDownloadButton button {
-        background: rgba(6, 182, 212, 0.15) !important;
-        color: #67e8f9 !important;
-        border: 1px solid rgba(6, 182, 212, 0.3) !important;
+        background: rgba(72, 202, 228, 0.15) !important; /* Sky Aqua transparent */
+        color: #48cae4ff !important; /* Sky Aqua Schrift */
+        border: 1px solid rgba(72, 202, 228, 0.3) !important;
         border-radius: 0.75rem !important;
         transition: all 0.3s ease !important;
         font-weight: 600 !important;
@@ -154,23 +159,23 @@ st.markdown("""
     }
     
     .stDownloadButton button:hover {
-        background: rgba(6, 182, 212, 0.25) !important;
-        border-color: #06b6d4 !important;
+        background: rgba(72, 202, 228, 0.25) !important;
+        border-color: #00b4d8ff !important; /* Turquoise Surf Rand */
         transform: translateY(-2px) !important;
     }
     
     /* File uploader */
     div[data-testid="stFileUploader"] {
-        background: rgba(15, 23, 42, 0.6);
-        border: 2px dashed rgba(100, 116, 139, 0.3);
+        background: rgba(3, 4, 94, 0.6);
+        border: 2px dashed rgba(72, 202, 228, 0.5); /* Sky Aqua gestrichelt */
         border-radius: 1rem;
         padding: 2rem;
         transition: all 0.3s ease;
     }
     
     div[data-testid="stFileUploader"]:hover {
-        border-color: rgba(6, 182, 212, 0.5);
-        background: rgba(6, 182, 212, 0.05);
+        border-color: #00b4d8ff;
+        background: rgba(0, 180, 216, 0.05);
     }
     
     /* Bilder: Skalierung auf 50% und Zentrierung */
@@ -178,8 +183,6 @@ st.markdown("""
         border-radius: 1rem;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        
-        /* Bild auf 50% der Spaltenbreite begrenzen */
         max-width: 50%; 
         height: auto;
         display: block; 
@@ -189,14 +192,14 @@ st.markdown("""
     
     /* Dataframes */
     .dataframe {
-        background: rgba(15, 23, 42, 0.8) !important;
+        background: rgba(2, 62, 138, 0.8) !important;
         border-radius: 0.75rem !important;
     }
     
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0.5rem;
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(3, 4, 94, 0.6);
         padding: 0.5rem;
         border-radius: 0.75rem;
     }
@@ -210,16 +213,16 @@ st.markdown("""
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
-        color: white !important;
+        background: linear-gradient(135deg, #00b4d8ff 0%, #48cae4ff 100%);
+        color: #03045eff !important; /* Dunkle Schrift auf hellem Tab */
     }
     
     /* Info boxes */
     .stAlert {
-        background: rgba(6, 182, 212, 0.1);
-        border-left: 4px solid #06b6d4;
+        background: rgba(72, 202, 228, 0.1);
+        border-left: 4px solid #00b4d8ff;
         border-radius: 0.75rem;
-        color: #67e8f9;
+        color: #48cae4ff;
     }
     
     /* Divider */
@@ -239,14 +242,9 @@ st.markdown("""
 # ---------------------------------------------------------
 # Load optional PNG preview images
 # ---------------------------------------------------------
-# Angenommen, diese Bilder existieren im Pfad 'static/'
 img_paths = ["static/Marker_example_001.png", "static/Marker_example_002.png"]
 images = []
 for p in img_paths:
-    # Simuliere das Laden der Bilder, behandle den Fehler, wenn sie fehlen
-    # Normalerweise würden Sie hier den Dateipfad prüfen und laden.
-    # Da ich keine Umgebung mit dem 'static/' Ordner habe, setze ich sie auf None, 
-    # damit die App nicht abstürzt, falls sie fehlen.
     if os.path.exists(p):
         try:
             img = Image.open(p)
@@ -269,13 +267,14 @@ st.markdown("""
 # ---------------------------------------------------------
 # Preview Section
 # ---------------------------------------------------------
+# Zeigt die Preview-Karten an, auch wenn die Bilder fehlen (diese zeigen dann eine st.info Meldung an).
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
     st.markdown("### ❌ Before")
-    if images[0] is not None:
+    if images and images[0] is not None:
         st.image(images[0], use_column_width=False)
     else:
         st.info("Preview image not found (static/Marker_example_001.png)")
@@ -284,13 +283,14 @@ with col1:
 with col2:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
     st.markdown("### ✅ After")
-    if images[1] is not None:
+    if images and images[1] is not None:
         st.image(images[1], use_column_width=False)
     else:
         st.info("Preview image not found (static/Marker_example_002.png)")
     st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ---------------------------------------------------------
 # Upload Section
@@ -350,12 +350,12 @@ with colE:
     timebase = fps_options[selected_fps_label]
 
 with colF:
-    # NEU: Dropdown für den Marker-Typ
+    # Dropdown für den Marker-Typ
     marker_type = st.selectbox(
-        "📍 XML Marker Type for Premiere Pro",
-        options=["Clip Markers", "Sequence Markers"],
+        "📍 XML Marker Type",
+        options=["Clip Markers (Standard)", "Sequence Markers"],
         index=0,
-        help="Clip Markers: Werden auf einem leeren Platzhalter-Clip in der Sequenz platziert. Sequence Markers: Werden direkt auf der Zeitleiste platziert."
+        help="Clip Markers: Markiert den Clip innerhalb einer Sequenz. Sequence Markers: Markiert die Zeitleiste selbst."
     )
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -366,8 +366,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 def timecode_to_frames(tc: str, fps: float):
     """
     Konvertiert 'HH:MM:SS:FF' nach Frames, basierend auf der tatsächlichen float-Framerate.
-    Die Umrechnung ist vereinfacht und ignoriert Drop-Frame-Logik, 
-    was für FCPXMLs in Premiere meistens in Ordnung ist.
     """
     if not tc or ":" not in tc:
         return None
@@ -381,7 +379,7 @@ def timecode_to_frames(tc: str, fps: float):
         f = int(parts[3])
     except ValueError:
         return None
-    # Berechne Sekunden und multipliziere mit fps
+    
     total_seconds = (h * 3600) + (m * 60) + s
     return round(total_seconds * fps + f)
 
@@ -399,9 +397,6 @@ def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type:
     fps_float = float(fps)
     
     # Für FCPXML wird die timebase immer als Integer-Frames/Sekunde angegeben.
-    # Bei float-Raten (wie 23.976) wird der nächstgelegene ganzzahlige Wert 
-    # (z.B. 24) für die timebase-Angabe im XML verwendet, aber die Timecodes 
-    # werden mit dem float-Wert berechnet.
     timebase_int = round(fps_float) 
 
     # Marker-Daten sammeln
@@ -418,10 +413,8 @@ def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type:
 
         # 1. IN-Frame bestimmen (Timecode oder Frame-Zahl)
         if col2.isdigit():
-            # XML-Import: Spalte 2 enthält Frameposition
             frame_in = int(col2)
         else:
-            # TXT-Import: Spalte 1 enthält Timecode
             frame_in = timecode_to_frames(tc_str, fps_float)
 
         if frame_in is None:
@@ -460,7 +453,7 @@ def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type:
     # Sequenz-Marker werden direkt in <sequence> geschrieben
     sequence_markers = markers_block if marker_type == "Sequence Markers" else ""
     # Clip-Marker werden in <clipitem> geschrieben
-    clip_markers = markers_block if marker_type == "Clip Markers" else ""
+    clip_markers = markers_block if marker_type == "Clip Markers (Standard)" else ""
 
     
     # FCP XML Basisstruktur
@@ -571,7 +564,6 @@ if uploaded_file:
 
         for i, g in enumerate(marker_group):
             if not g:
-                # Behält den ShotID-Wert bei, wenn keine Gruppen-Match gefunden wurde
                 labeled.append(original_lines[i][4] if len(original_lines[i]) > 4 else "")
                 continue
             
@@ -589,7 +581,6 @@ if uploaded_file:
             row = row + [""] * (8 - len(row)) if len(row) < 8 else row
             if replace_user and user_value:
                 row[0] = user_value
-            # Überschreibe nur, wenn ein neuer ShotID generiert wurde (labeled[i] ist nicht leer)
             if labeled[i]:
                 row[4] = labeled[i]
             preview_lines.append(row)
@@ -616,7 +607,6 @@ if uploaded_file:
         timestamp = datetime.now().strftime("%Y%m%d")
         export_base = f"{base_filename}_processed_{timestamp}"
         
-        # Aufruf mit dem neuen Parameter marker_type
         xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base, marker_type=marker_type)
 
 
