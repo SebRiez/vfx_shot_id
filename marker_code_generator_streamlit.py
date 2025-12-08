@@ -30,9 +30,9 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* ANGEPASST: Begrenzung der maximalen Breite des Hauptinhalts */
+    /* Begrenzung der maximalen Breite des Hauptinhalts */
     .main {
-        max-width: 900px; /* Reduziert von 1200px auf 900px für ein schmaleres Layout */
+        max-width: 900px; /* Reduziert von 1200px auf 900px */
         padding: 0 3rem; 
         margin-left: auto;
         margin-right: auto;
@@ -263,6 +263,8 @@ st.markdown("""
 # ---------------------------------------------------------
 # Preview Section
 # ---------------------------------------------------------
+# Hier gab es vorher möglicherweise leere st.markdown() Aufrufe, die die Balken erzeugt haben.
+# Sie wurden hier entfernt, um das Layout direkt auf die Glass-Container folgen zu lassen.
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
