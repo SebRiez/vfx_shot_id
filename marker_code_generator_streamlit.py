@@ -6,7 +6,7 @@ import re
 import os
 from datetime import datetime
 import xml.etree.ElementTree as ET
-from PIL import Image
+from PIL import Image # Import hinzugefügt, falls es fehlt
 from xml.sax.saxutils import escape as xml_escape
 
 # Mappe von Farbnamen zu CSS-kompatiblen Werten (Hex oder Standardname)
@@ -185,6 +185,18 @@ st.markdown("""
         background: rgba(66, 179, 143, 0.1);
     }
     
+    /* Bilder: Skalierung und Zentrierung */
+    div[data-testid="stImage"] img {
+        border-radius: 1rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(240, 240, 240, 0.1);
+        max-width: 50%; 
+        height: auto;
+        display: block; 
+        margin-left: auto; 
+        margin-right: auto; 
+    }
+    
     /* Dataframes */
     .dataframe {
         background: #2D2F34 !important;
@@ -229,10 +241,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Load optional PNG preview images (Simplified)
+# Load optional PNG preview images (REINTEGRIERT)
 # ---------------------------------------------------------
-# HINWEIS: Bilder (z.B. before.png, after.png) aus dem Static-Ordner können im aktuellen Ausführungsumfeld nicht geladen werden. 
-# Daher werden Platzhalter angezeigt.
+img_paths = ["static/Marker_example_001.png", "static/Marker_example_002.png"]
+images = []
+for p in img_paths:
+    if os.path.exists(p):
+        try:
+            img = Image.open(p)
+            images.append(img)
+        except Exception:
+            images.append(None)
+    else:
+        images.append(None)
 
 # ---------------------------------------------------------
 # Header
@@ -245,17 +266,30 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Preview Section (Simulierte Anzeige der Bilder)
+# Preview Section (REINTEGRIERT mit If-Else-Logik)
 # ---------------------------------------------------------
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 st.markdown("### 🖼️ Data Preview")
 col1, col2 = st.columns(2)
 with col1:
-    # Platzhalter für das "Before" Bild
-    st.info("❌ Before Preview: Das Vorschaubild der Originaldaten würde hier angezeigt.")
+    st.markdown('<div class="preview-card">', unsafe_allow_html=True)
+    st.markdown("### ❌ Before")
+    # Bild oder Info anzeigen
+    if images and images[0] is not None:
+        st.image(images[0], use_column_width=False)
+    else:
+        st.info("Preview image not found (static/Marker_example_001.png)")
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with col2:
-    # Platzhalter für das "After" Bild
-    st.info("✅ After Preview: Das Vorschaubild der verarbeiteten Daten würde hier angezeigt.")
+    st.markdown('<div class="preview-card">', unsafe_allow_html=True)
+    st.markdown("### ✅ After")
+    # Bild oder Info anzeigen
+    if images and images[1] is not None:
+        st.image(images[1], use_column_width=False)
+    else:
+        st.info("Preview image not found (static/Marker_example_002.png)")
+    st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -317,7 +351,7 @@ with colF:
 st.markdown("---")
 st.markdown("### 🌈 Marker Color Settings")
 
-# --- HELPER FUNKTION FÜR FARBAUSWAHL MIT SWATCH (Wird nur für die Anzeige des ausgewählten Wertes verwendet) ---
+# --- HELPER FUNKTION FÜR FARBAUSWAHL MIT SWATCH ---
 def get_swatch_html(color_name: str, size: int = 15) -> str:
     """Erzeugt den HTML-Code für einen Farbkreis (Swatch)."""
     hex_code = COLOR_HEX_MAP.get(color_name, '#FFFFFF')
@@ -341,7 +375,7 @@ with colG:
     )
 
 with colH:
-    # 2. Optionale Farb-Override: Visuell die Selectbox zuerst anzeigen
+    # 2. Optionale Farb-Override: Selectbox zuerst anzeigen
     override_color = st.selectbox(
         "Forced Export Color",
         options=COLOR_OPTIONS,
@@ -350,12 +384,13 @@ with colH:
         disabled=not st.session_state["override_enable_key"], 
         key="override_color",
     )
-
-    # Checkbox danach anzeigen
+    
+    # Checkbox DANACH anzeigen (visuell unterhalb der Selectbox)
     override_color_enable = st.checkbox(
         "🔥 Force All Markers to One Color", 
         key="override_enable_key", # Greift auf den Session State zu und aktualisiert ihn
     )
+
 
 # --- VISUELLE BESTÄTIGUNG DER GEWÄHLTEN FARBEN ---
 st.markdown('<br>', unsafe_allow_html=True)
@@ -557,8 +592,11 @@ if uploaded_file:
             labeled.append(shotid)
             group_counter[g] += step_size
 
-        # --- FINAL PREVIEW LINE ASSEMBLY (Updated Color Logic) ---
+        # --- FINAL PREVIEW LINE ASSEMBLY (Color Logic) ---
         preview_lines = []
+        # Den Wert aus dem Session State lesen, da die Checkbox später definiert wurde
+        override_active = st.session_state.get("override_enable_key", False) 
+        
         for i, row in enumerate(original_lines):
             # Sicherstellen, dass die Zeile mindestens 8 Spalten hat
             row = row + [""] * (8 - len(row)) if len(row) < 8 else row
@@ -567,7 +605,7 @@ if uploaded_file:
             input_color = (row[3] or "").strip()
             final_color = default_color # Startwert: Vom Nutzer definierte Standardfarbe
 
-            if st.session_state["override_enable_key"]: # Verwende den Session State
+            if override_active:
                 # Override ist aktiv: Erzwinge die gewählte Override-Farbe
                 final_color = override_color
             elif input_color:
@@ -609,7 +647,7 @@ if uploaded_file:
         timestamp = datetime.now().strftime("%Y%m%d")
         export_base = f"{base_filename}_processed_{timestamp}"
         
-        # Sicherstellen, dass die Farbe in XML-Export verwendet wird (Zeile 470)
+        # XML-Export
         xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base, marker_type=marker_type)
 
         col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
