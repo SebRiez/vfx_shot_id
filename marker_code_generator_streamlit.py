@@ -20,6 +20,24 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
+# SESSION STATE (Historie)
+# ---------------------------------------------------------
+if 'file_history' not in st.session_state:
+    st.session_state.file_history = []
+
+def add_to_history(filename: str):
+    """Fügt einen Dateinamen zur Historie hinzu (maximal 10 Einträge)."""
+    if filename not in st.session_state.file_history:
+        st.session_state.file_history.insert(0, filename)
+    # Begrenze die Liste auf z.B. 10 Einträge
+    st.session_state.file_history = st.session_state.file_history[:10]
+
+def clear_history():
+    """Löscht die gesamte Historie."""
+    st.session_state.file_history = []
+
+
+# ---------------------------------------------------------
 # CSS – Modern Dark Mode + Glassmorphism + Gradients
 # ---------------------------------------------------------
 st.markdown("""
@@ -88,8 +106,6 @@ st.markdown("""
     /* FIX: Wenn eine preview-card leer ist, blende sie aus. */
     .preview-card:empty {
         display: none !important;
-        /* Wichtig: Es kann sein, dass das übergeordnete Element (st.columns) 
-           noch Platz reserviert. Dieser Fix sollte aber die visuelle Störung beheben. */
     }
 
     .preview-card:hover {
@@ -159,13 +175,6 @@ st.markdown("""
     }
     
     /* File uploader */
-    .uploadedFile {
-        background: rgba(6, 182, 212, 0.1) !important;
-        border: 2px dashed rgba(6, 182, 212, 0.4) !important;
-        border-radius: 1rem !important;
-        padding: 1rem !important;
-    }
-    
     div[data-testid="stFileUploader"] {
         background: rgba(15, 23, 42, 0.6);
         border: 2px dashed rgba(100, 116, 139, 0.3);
@@ -238,6 +247,11 @@ st.markdown("""
     label {
         color: rgba(255, 255, 255, 0.9) !important;
         font-weight: 500 !important;
+    }
+    
+    /* Sidebar specific styling (optional) */
+    .css-1d391kg {
+        background: #0f172a; /* Dunkler als Main */
     }
 </style>
 """, unsafe_allow_html=True)
@@ -609,6 +623,7 @@ if uploaded_file:
             )
 
         st.success("✅ Processing complete! Download your files above.")
+        add_to_history(uploaded_file.name) # <-- WICHTIG: Dateiname zur Historie hinzufügen
 
     except Exception as e:
         st.error(f"❌ Processing Error: {e}")
@@ -619,3 +634,29 @@ else:
     st.markdown('<div class="glass-container">', unsafe_allow_html=True)
     st.info("📤 Please upload a marker .txt or Premiere XML file to begin processing.")
     st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# HISTORY SIDEBAR
+# ---------------------------------------------------------
+
+with st.sidebar:
+    st.markdown("### 📜 Recent Files")
+    
+    if st.session_state.file_history:
+        st.info(f"Total: **{len(st.session_state.file_history)}** files")
+        
+        # Anzeige der Liste
+        for i, filename in enumerate(st.session_state.file_history):
+            st.markdown(f"**{i+1}.** {filename}")
+        
+        st.markdown("---")
+        
+        # Clear Button
+        st.button(
+            "🗑️ Clear History", 
+            on_click=clear_history, 
+            type="primary",
+            use_container_width=True
+        )
+    else:
+        st.markdown("Keine Dateien bearbeitet.")
