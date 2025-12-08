@@ -15,42 +15,9 @@ from xml.sax.saxutils import escape as xml_escape
 st.set_page_config(
     page_title="VFX ShotID Generator",
     page_icon="🎬",
-    initial_sidebar_state="expanded" # Geändert auf 'expanded', damit History sofort sichtbar ist
+    layout="wide",
+    initial_sidebar_state="collapsed" # Sidebar ist nun wieder standardmäßig eingeklappt
 )
-
-# ---------------------------------------------------------
-# SESSION STATE (Historie)
-# ---------------------------------------------------------
-# Initialisierung des Session State, falls noch nicht vorhanden
-if 'file_history' not in st.session_state:
-    st.session_state.file_history = []
-
-def log_export_data(name, base_filename, txt, csv_c, csv_s, xml):
-    """Speichert alle Exportdaten als Dictionary im Session State (maximal 10 Einträge)."""
-    new_entry = {
-        "name": name,
-        "base_filename": base_filename,
-        "txt_content": txt,
-        "csv_c_content": csv_c,
-        "csv_s_content": csv_s,
-        "xml_content": xml
-    }
-
-    # Vermeide Duplikate: Entferne alte Einträge mit demselben Namen
-    st.session_state.file_history = [
-        item for item in st.session_state.file_history if item["name"] != name
-    ]
-    
-    # Füge den neuen Eintrag oben ein
-    st.session_state.file_history.insert(0, new_entry)
-    
-    # Begrenze die Liste auf z.B. 10 Einträge
-    st.session_state.file_history = st.session_state.file_history[:10]
-
-def clear_history():
-    """Löscht die gesamte Historie."""
-    st.session_state.file_history = []
-
 
 # ---------------------------------------------------------
 # CSS – Modern Dark Mode + Glassmorphism + Gradients
@@ -65,7 +32,7 @@ st.markdown("""
 
     /* Begrenzung der maximalen Breite des Hauptinhalts */
     .main {
-        max-width: 900px; /* Begrenzte Breite */
+        max-width: 900px; /* Begrenzte Breite beibehalten */
         padding: 0 3rem; 
         margin-left: auto;
         margin-right: auto;
@@ -263,19 +230,12 @@ st.markdown("""
         color: rgba(255, 255, 255, 0.9) !important;
         font-weight: 500 !important;
     }
-    
-    /* Sidebar specific styling (optional) */
-    .css-1d391kg {
-        background: #0f172a; /* Dunkler als Main */
-    }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # Load optional PNG preview images
 # ---------------------------------------------------------
-# HINWEIS: Diese Bilder müssen im Unterordner 'static/' existieren, 
-# damit sie im Streamlit-App-Ordner gefunden werden.
 img_paths = ["static/Marker_example_001.png", "static/Marker_example_002.png"]
 images = []
 for p in img_paths:
@@ -588,31 +548,6 @@ if uploaded_file:
             preview_lines.append(row)
 
         # ---------------------------------------------------------
-        # PREVIEW + EXPORT DATA GENERATION
-        # ---------------------------------------------------------
-        
-        # Daten für die Anzeige und den Download vorbereiten
-        df = pd.DataFrame(preview_lines)
-        txt = "\n".join(["\t".join(r) for r in preview_lines])
-        csv_c = df.to_csv(index=False)
-        csv_s = df.to_csv(index=False, sep=";")
-
-        timestamp = datetime.now().strftime("%Y%m%d")
-        export_base = f"{base_filename}_processed_{timestamp}"
-        
-        xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base)
-
-        # Daten im Session State speichern (für History Re-Download)
-        log_export_data(
-            uploaded_file.name,
-            export_base,
-            txt,
-            csv_c,
-            csv_s,
-            xml_content
-        )
-
-        # ---------------------------------------------------------
         # PREVIEW + EXPORT DOWNLOAD BUTTONS
         # ---------------------------------------------------------
         st.markdown("### 📊 Data Preview")
@@ -624,6 +559,18 @@ if uploaded_file:
 
         st.markdown("---")
         st.markdown("### ⬇️ Export Options")
+
+        # Daten für den Download generieren
+        df = pd.DataFrame(preview_lines)
+        txt = "\n".join(["\t".join(r) for r in preview_lines])
+        csv_c = df.to_csv(index=False)
+        csv_s = df.to_csv(index=False, sep=";")
+
+        timestamp = datetime.now().strftime("%Y%m%d")
+        export_base = f"{base_filename}_processed_{timestamp}"
+        
+        xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base)
+
 
         col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
 
@@ -657,68 +604,3 @@ else:
     st.markdown('<div class="glass-container">', unsafe_allow_html=True)
     st.info("📤 Please upload a marker .txt or Premiere XML file to begin processing.")
     st.markdown('</div>', unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# HISTORY SIDEBAR
-# ---------------------------------------------------------
-
-with st.sidebar:
-    st.markdown("### 📜 Recent Files (Re-Download)")
-    
-    if st.session_state.file_history:
-        st.info(f"Total: **{len(st.session_state.file_history)}** files")
-        
-        # Gehe die Liste der gespeicherten Daten durch
-        for i, data in enumerate(st.session_state.file_history):
-            st.markdown(f"#### **{i+1}. {data['name']}**")
-            
-            # Button für jedes Exportformat erstellen
-            col_dl_side1, col_dl_side2, col_dl_side3, col_dl_side4 = st.columns(4)
-            
-            with col_dl_side1:
-                st.download_button(
-                    "TXT", 
-                    data["txt_content"], 
-                    file_name=f"{data['base_filename']}.txt", 
-                    use_container_width=True
-                )
-            
-            with col_dl_side2:
-                st.download_button(
-                    "CSV (,)", 
-                    data["csv_c_content"], 
-                    file_name=f"{data['base_filename']}_comma.csv", 
-                    use_container_width=True
-                )
-            
-            with col_dl_side3:
-                st.download_button(
-                    "CSV (;)", 
-                    data["csv_s_content"], 
-                    file_name=f"{data['base_filename']}_semicolon.csv", 
-                    use_container_width=True
-                )
-            
-            with col_dl_side4:
-                st.download_button(
-                    "XML", 
-                    data["xml_content"], 
-                    file_name=f"{data['base_filename']}_PremiereMarkers.xml", 
-                    mime="application/xml",
-                    use_container_width=True
-                )
-            
-            if i < len(st.session_state.file_history) - 1:
-                st.markdown("---") # Trennlinie zwischen Einträgen
-        
-        st.markdown("---")
-        
-        # Clear Button
-        st.button(
-            "🗑️ Clear History", 
-            on_click=clear_history, 
-            type="primary",
-            use_container_width=True
-        )
-    else:
-        st.markdown("Keine Dateien bearbeitet.")
