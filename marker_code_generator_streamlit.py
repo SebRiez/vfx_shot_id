@@ -28,7 +28,6 @@ COLOR_OPTIONS = list(COLOR_HEX_MAP.keys())
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="VFX ShotID Generator",
-    page_icon="🎬",
     layout="centered", 
     initial_sidebar_state="collapsed"
 )
@@ -260,7 +259,7 @@ for p in img_paths:
 # ---------------------------------------------------------
 st.markdown("""
 <div class="main-header">
-    <h1>🎬 VFX ShotID Generator</h1>
+    <h1>VFX ShotID Generator</h1>
     <p>Convert marker files to organized shot IDs with professional precision</p>
 </div>
 """, unsafe_allow_html=True)
