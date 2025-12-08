@@ -269,7 +269,6 @@ st.markdown("""
 # Preview Section (REINTEGRIERT mit If-Else-Logik)
 # ---------------------------------------------------------
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
-st.markdown("### 🖼️ Data Preview")
 col1, col2 = st.columns(2)
 with col1:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
