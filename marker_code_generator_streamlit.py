@@ -1,4 +1,4 @@
-# app.py (VFX ShotID Generator – Ocean Blue Serenity Theme)
+# app.py (VFX ShotID Generator – Emerald Green Theme)
 
 import streamlit as st
 import pandas as pd
@@ -20,22 +20,22 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# CSS – Ocean Blue Serenity Palette Integration
+# CSS – Emerald Green Palette (EditingTools.io Style)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* FARBPALETTE:
-     * Deep Twilight (Dunkel Basis): #03045eff 
-     * French Blue (Dunkel Akzent): #023e8aff
-     * Turquoise Surf (Akzent Hell): #00b4d8ff
-     * Sky Aqua (Highlight): #48cae4ff 
+    /* FARBPALETTE (Emerald Green):
+     * Deep Dark Grey (Hintergrund): #1E2025 
+     * Mid Dark Grey (Container): #2D2F34
+     * Emerald Green (Akzent, Interaktion): #42B38F
+     * Light Green (Highlight): #80ED99
+     * Off-White (Text): #F0F0F0
     */
 
-    /* Main background with gradient */
+    /* Main background */
     .stApp { 
-        /* Verlauf: Deep Twilight -> French Blue -> Deep Twilight (dunkler, ruhiger Look) */
-        background: linear-gradient(135deg, #03045eff 0%, #023e8aff 50%, #03045eff 100%);
-        color: #ffffff;
+        background-color: #1E2025;
+        color: #F0F0F0;
     }
 
     /* Begrenzung der maximalen Breite des Hauptinhalts */
@@ -46,18 +46,18 @@ st.markdown("""
         margin-right: auto;
     }
     
-    /* Header styling (Gradient von Turquoise Surf zu Sky Aqua) */
+    /* Header styling (Gradient in Emerald Green) */
     .main-header {
-        background: linear-gradient(135deg, #00b4d8ff 0%, #48cae4ff 100%);
+        background: linear-gradient(135deg, #42B38F 0%, #80ED99 100%);
         padding: 2.5rem;
         border-radius: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: 0 20px 60px rgba(0, 180, 216, 0.3); /* Schatten in Türkis */
+        box-shadow: 0 20px 60px rgba(66, 179, 143, 0.3); /* Grüner Schatten */
         text-align: center;
     }
     
     .main-header h1 {
-        color: white;
+        color: #1E2025; /* Dunkle Schrift auf hellem Header */
         font-size: 3rem;
         font-weight: 800;
         margin: 0;
@@ -66,30 +66,28 @@ st.markdown("""
     }
     
     .main-header p {
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(30, 32, 37, 0.9);
         font-size: 1.1rem;
         margin: 0.5rem 0 0 0;
-        font-weight: 300;
+        font-weight: 500;
     }
     
-    /* Glass container styling (Hintergrund bleibt dunkel transparent) */
+    /* Container styling (Mid Dark Grey) */
     .glass-container {
-        background: rgba(3, 4, 94, 0.4); /* Leichter Deep Twilight Transparenz */
+        background: #2D2F34;
         border-radius: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(240, 240, 240, 0.1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(12px);
         padding: 2rem;
         margin-bottom: 1.5rem;
     }
     
     /* Preview cards */
     .preview-card {
-        background: rgba(3, 4, 94, 0.6);
-        border: 1px solid rgba(0, 180, 216, 0.2); /* Turquoise Surf Akzent */
+        background: #2D2F34;
+        border: 1px solid rgba(66, 179, 143, 0.2); /* Emerald Akzent */
         border-radius: 1rem;
         padding: 1.5rem;
-        backdrop-filter: blur(8px);
         transition: all 0.3s ease;
     }
     
@@ -99,30 +97,30 @@ st.markdown("""
     }
 
     .preview-card:hover {
-        border-color: rgba(0, 180, 216, 0.5);
-        box-shadow: 0 8px 24px rgba(0, 180, 216, 0.2);
+        border-color: rgba(66, 179, 143, 0.5);
+        box-shadow: 0 8px 24px rgba(66, 179, 143, 0.2);
         transform: translateY(-2px);
     }
     
     /* Section headers */
     h2, h3 {
-        color: #48cae4ff !important; /* Sky Aqua */
+        color: #80ED99 !important; /* Light Green */
         font-weight: 700 !important;
         margin-bottom: 1rem !important;
     }
     
     /* Input fields */
     div.stTextInput input, div.stNumberInput input, div[data-baseweb="select"] {
-        background: rgba(2, 62, 138, 0.8) !important; /* Dunkler French Blue */
-        border: 1px solid rgba(72, 202, 228, 0.3) !important; /* Sky Aqua Akzentlinie */
+        background: #1E2025 !important; 
+        border: 1px solid rgba(128, 237, 153, 0.3) !important; 
         border-radius: 0.5rem !important;
-        color: white !important;
+        color: #F0F0F0 !important;
         transition: all 0.3s ease !important;
     }
     
     div.stTextInput input:focus, div.stNumberInput input:focus, div[data-baseweb="select"]:focus-within {
-        border-color: #00b4d8ff !important; /* Turquoise Surf Fokus */
-        box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1) !important;
+        border-color: #42B38F !important; 
+        box-shadow: 0 0 0 3px rgba(66, 179, 143, 0.3) !important;
     }
     
     /* Checkboxes */
@@ -130,28 +128,29 @@ st.markdown("""
         padding: 0.5rem;
     }
     
-    /* Buttons - Primary (Gradient von Bright Teal Blue zu Turquoise Surf) */
+    /* Buttons - Primary (Emerald Green Akzent) */
     .stButton button {
-        background: linear-gradient(135deg, #0077b6ff 0%, #00b4d8ff 100%) !important;
-        color: white !important;
+        background: #42B38F !important;
+        color: #1E2025 !important;
         border-radius: 0.75rem !important;
         transition: all 0.3s ease !important;
         border: none !important;
         font-weight: 600 !important;
         padding: 0.75rem 1.5rem !important;
-        box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3) !important;
+        box-shadow: 0 4px 12px rgba(66, 179, 143, 0.3) !important;
     }
     
     .stButton button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 24px rgba(0, 119, 182, 0.5) !important;
+        background: #80ED99 !important;
+        box-shadow: 0 8px 24px rgba(66, 179, 143, 0.5) !important;
     }
     
-    /* Download buttons */
+    /* Download buttons (Sekundärer Akzent) */
     .stDownloadButton button {
-        background: rgba(72, 202, 228, 0.15) !important; /* Sky Aqua transparent */
-        color: #48cae4ff !important; /* Sky Aqua Schrift */
-        border: 1px solid rgba(72, 202, 228, 0.3) !important;
+        background: rgba(128, 237, 153, 0.15) !important; 
+        color: #80ED99 !important; 
+        border: 1px solid rgba(128, 237, 153, 0.3) !important;
         border-radius: 0.75rem !important;
         transition: all 0.3s ease !important;
         font-weight: 600 !important;
@@ -159,30 +158,30 @@ st.markdown("""
     }
     
     .stDownloadButton button:hover {
-        background: rgba(72, 202, 228, 0.25) !important;
-        border-color: #00b4d8ff !important; /* Turquoise Surf Rand */
+        background: rgba(128, 237, 153, 0.25) !important;
+        border-color: #42B38F !important; 
         transform: translateY(-2px) !important;
     }
     
-    /* File uploader */
+    /* File uploader (Dunkler Hintergrund mit hellem Rand) */
     div[data-testid="stFileUploader"] {
-        background: rgba(3, 4, 94, 0.6);
-        border: 2px dashed rgba(72, 202, 228, 0.5); /* Sky Aqua gestrichelt */
+        background: #2D2F34;
+        border: 2px dashed rgba(128, 237, 153, 0.5); 
         border-radius: 1rem;
         padding: 2rem;
         transition: all 0.3s ease;
     }
     
     div[data-testid="stFileUploader"]:hover {
-        border-color: #00b4d8ff;
-        background: rgba(0, 180, 216, 0.05);
+        border-color: #42B38F;
+        background: rgba(66, 179, 143, 0.1);
     }
     
     /* Bilder: Skalierung auf 50% und Zentrierung */
     div[data-testid="stImage"] img {
         border-radius: 1rem;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(240, 240, 240, 0.1);
         max-width: 50%; 
         height: auto;
         display: block; 
@@ -192,48 +191,63 @@ st.markdown("""
     
     /* Dataframes */
     .dataframe {
-        background: rgba(2, 62, 138, 0.8) !important;
+        background: #2D2F34 !important;
         border-radius: 0.75rem !important;
     }
     
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0.5rem;
-        background: rgba(3, 4, 94, 0.6);
+        background: #2D2F34;
         padding: 0.5rem;
         border-radius: 0.75rem;
     }
     
     .stTabs [data-baseweb="tab"] {
         background: transparent;
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(240, 240, 240, 0.6);
         border-radius: 0.5rem;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #00b4d8ff 0%, #48cae4ff 100%);
-        color: #03045eff !important; /* Dunkle Schrift auf hellem Tab */
+        /* Aktiver Tab als heller Akzent */
+        background: linear-gradient(135deg, #42B38F 0%, #80ED99 100%);
+        color: #1E2025 !important; 
     }
     
-    /* Info boxes */
+    /* Info boxes (semantische Farbe Grün) */
     .stAlert {
-        background: rgba(72, 202, 228, 0.1);
-        border-left: 4px solid #00b4d8ff;
+        background: rgba(128, 237, 153, 0.1);
+        border-left: 4px solid #42B38F;
         border-radius: 0.75rem;
-        color: #48cae4ff;
+        color: #80ED99;
+    }
+    
+    /* Success messages (noch stärkeres semantisches Grün) */
+    div[data-testid="stSuccess"] {
+        background-color: rgba(76, 175, 80, 0.2) !important;
+        border-left: 4px solid #4CAF50 !important;
+        color: #4CAF50 !important;
+    }
+
+    /* Error messages (semantische Farbe Rot) */
+    div[data-testid="stError"] {
+        background-color: rgba(244, 67, 54, 0.2) !important;
+        border-left: 4px solid #F44336 !important;
+        color: #F44336 !important;
     }
     
     /* Divider */
     hr {
-        border-color: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(240, 240, 240, 0.1) !important;
         margin: 2rem 0 !important;
     }
     
     /* Labels */
     label {
-        color: rgba(255, 255, 255, 0.9) !important;
+        color: rgba(240, 240, 240, 0.9) !important;
         font-weight: 500 !important;
     }
 </style>
@@ -267,7 +281,6 @@ st.markdown("""
 # ---------------------------------------------------------
 # Preview Section
 # ---------------------------------------------------------
-# Zeigt die Preview-Karten an, auch wenn die Bilder fehlen (diese zeigen dann eine st.info Meldung an).
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
@@ -290,7 +303,6 @@ with col2:
     st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ---------------------------------------------------------
 # Upload Section
@@ -352,8 +364,8 @@ with colE:
 with colF:
     # Dropdown für den Marker-Typ
     marker_type = st.selectbox(
-        "📍 XML Marker Type for Premiere Pro",
-        options=["Clip Markers", "Sequence Markers"],
+        "📍 XML Marker Type",
+        options=["Clip Markers (Standard)", "Sequence Markers"],
         index=0,
         help="Clip Markers: Markiert den Clip innerhalb einer Sequenz. Sequence Markers: Markiert die Zeitleiste selbst."
     )
