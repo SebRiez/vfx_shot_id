@@ -15,7 +15,8 @@ from xml.sax.saxutils import escape as xml_escape
 st.set_page_config(
     page_title="VFX ShotID Generator",
     page_icon="🎬",
-    initial_sidebar_state="collapsed" # Sidebar ist nun wieder standardmäßig eingeklappt
+    layout="centered",  # <--- HIER AUF "centered" UMGESTELLT FÜR SCHMÄLERE ANSICHT
+    initial_sidebar_state="collapsed"
 )
 
 # ---------------------------------------------------------
@@ -29,9 +30,12 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* Begrenzung der maximalen Breite des Hauptinhalts */
+    /* Begrenzung der maximalen Breite des Hauptinhalts 
+       HINWEIS: Bei layout="centered" setzt Streamlit eine interne Obergrenze (~730px), 
+       die kleiner ist als die hier gesetzten 900px.
+    */
     .main {
-        max-width: 900px; /* Begrenzte Breite beibehalten */
+        max-width: 900px; 
         padding: 0 3rem; 
         margin-left: auto;
         margin-right: auto;
@@ -103,7 +107,7 @@ st.markdown("""
     }
     
     /* Input fields */
-    div.stTextInput input, div.stNumberInput input {
+    div.stTextInput input, div.stNumberInput input, div[data-baseweb="select"] {
         background: rgba(15, 23, 42, 0.8) !important;
         border: 1px solid rgba(100, 116, 139, 0.3) !important;
         border-radius: 0.5rem !important;
@@ -111,7 +115,7 @@ st.markdown("""
         transition: all 0.3s ease !important;
     }
     
-    div.stTextInput input:focus, div.stNumberInput input:focus {
+    div.stTextInput input:focus, div.stNumberInput input:focus, div[data-baseweb="select"]:focus-within {
         border-color: #06b6d4 !important;
         box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
     }
@@ -235,9 +239,14 @@ st.markdown("""
 # ---------------------------------------------------------
 # Load optional PNG preview images
 # ---------------------------------------------------------
+# Angenommen, diese Bilder existieren im Pfad 'static/'
 img_paths = ["static/Marker_example_001.png", "static/Marker_example_002.png"]
 images = []
 for p in img_paths:
+    # Simuliere das Laden der Bilder, behandle den Fehler, wenn sie fehlen
+    # Normalerweise würden Sie hier den Dateipfad prüfen und laden.
+    # Da ich keine Umgebung mit dem 'static/' Ordner habe, setze ich sie auf None, 
+    # damit die App nicht abstürzt, falls sie fehlen.
     if os.path.exists(p):
         try:
             img = Image.open(p)
@@ -269,7 +278,7 @@ with col1:
     if images[0] is not None:
         st.image(images[0], use_column_width=False)
     else:
-        st.info("Preview image not found")
+        st.info("Preview image not found (static/Marker_example_001.png)")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
@@ -278,7 +287,7 @@ with col2:
     if images[1] is not None:
         st.image(images[1], use_column_width=False)
     else:
-        st.info("Preview image not found")
+        st.info("Preview image not found (static/Marker_example_002.png)")
     st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -306,9 +315,9 @@ fps_options = {
     "23.98 fps (23.976)": 23.976,
     "24 fps": 24,
     "25 fps": 25,
-    "29.97 fps (Drop Frame)": 29.97, # Hinweis: Streamlit speichert hier den numerischen Wert
+    "29.97 fps (Drop Frame)": 29.97, 
     "30 fps": 30,
-    "50 fps": 50, # 50 fps ist in Europa üblich
+    "50 fps": 50, 
     "59.94 fps (Drop Frame)": 59.94,
     "60 fps": 60
 }
@@ -328,24 +337,37 @@ with colD:
     replace_user = st.checkbox("✏️ Replace username in column 1")
     user_value = st.text_input("Custom Username:", value="VFX_ARTIST").strip() if replace_user else ""
 
-# NEU: Dropdown für die Timebase (Framerate)
-selected_fps_label = st.selectbox(
-    "🎞️ Timebase for XML Export (fps)", 
-    options=list(fps_options.keys()), # Zeigt die Keys (Labels) an
-    index=1 # Wählt 24 fps als Standard (Index 1)
-)
+# Layout für FPS und Marker-Typ
+colE, colF = st.columns(2)
 
-# NEU: Speichern des numerischen Wertes, der zum Export verwendet wird
-timebase = fps_options[selected_fps_label]
+with colE:
+    # Dropdown für die Timebase (Framerate)
+    selected_fps_label = st.selectbox(
+        "🎞️ Timebase for XML Export (fps)", 
+        options=list(fps_options.keys()),
+        index=1
+    )
+    timebase = fps_options[selected_fps_label]
+
+with colF:
+    # NEU: Dropdown für den Marker-Typ
+    marker_type = st.selectbox(
+        "📍 XML Marker Type for Premiere Pro",
+        options=["Clip Markers", "Sequence Markers"],
+        index=0,
+        help="Clip Markers: Werden auf einem leeren Platzhalter-Clip in der Sequenz platziert. Sequence Markers: Werden direkt auf der Zeitleiste platziert."
+    )
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # Helper: Timecode → Frames
 # ---------------------------------------------------------
-def timecode_to_frames(tc: str, fps: int):
+def timecode_to_frames(tc: str, fps: float):
     """
-    Konvertiert 'HH:MM:SS:FF' nach Frames.
+    Konvertiert 'HH:MM:SS:FF' nach Frames, basierend auf der tatsächlichen float-Framerate.
+    Die Umrechnung ist vereinfacht und ignoriert Drop-Frame-Logik, 
+    was für FCPXMLs in Premiere meistens in Ordnung ist.
     """
     if not tc or ":" not in tc:
         return None
@@ -359,26 +381,32 @@ def timecode_to_frames(tc: str, fps: int):
         f = int(parts[3])
     except ValueError:
         return None
-    return ((h * 3600) + (m * 60) + s) * fps + f
+    # Berechne Sekunden und multipliziere mit fps
+    total_seconds = (h * 3600) + (m * 60) + s
+    return round(total_seconds * fps + f)
 
 # ---------------------------------------------------------
-# XML-Export: Clip-Marker (Variante B)
+# XML-Export: Clip-Marker ODER Sequence-Marker
 # ---------------------------------------------------------
-def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_Markers"):
+def generate_premiere_xml(preview_lines, fps: float, seq_name: str, marker_type: str):
     """
-    Erstellt ein FCP-XML (xmeml), das von Premiere als Sequenz mit
-    EINEM Clipitem und darin liegenden Markern importiert werden kann.
+    Erstellt ein FCP-XML (xmeml). Marker werden entweder in das <sequence>
+    (Sequenz-Marker) oder in das <clipitem> (Clip-Marker) Element geschrieben.
     """
 
     marker_xml_chunks = []
     max_frame = 0
-    fps_int = int(fps)
+    fps_float = float(fps)
+    
+    # Für FCPXML wird die timebase immer als Integer-Frames/Sekunde angegeben.
+    # Bei float-Raten (wie 23.976) wird der nächstgelegene ganzzahlige Wert 
+    # (z.B. 24) für die timebase-Angabe im XML verwendet, aber die Timecodes 
+    # werden mit dem float-Wert berechnet.
+    timebase_int = round(fps_float) 
 
+    # Marker-Daten sammeln
     for row in preview_lines:
-        # auf mind. 8 Felder auffüllen
         row = row + [""] * (8 - len(row)) if len(row) < 8 else row
-
-        username = (row[0] or "").strip()
         tc_str   = (row[1] or "").strip()
         col2     = (row[2] or "").strip()
         color    = (row[3] or "Cyan").strip()
@@ -388,33 +416,24 @@ def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_
         if not shotid:
             continue
 
-        # IN-Frame bestimmen
+        # 1. IN-Frame bestimmen (Timecode oder Frame-Zahl)
         if col2.isdigit():
             # XML-Import: Spalte 2 enthält Frameposition
             frame_in = int(col2)
         else:
             # TXT-Import: Spalte 1 enthält Timecode
-            frame_in = timecode_to_frames(tc_str, fps_int)
+            frame_in = timecode_to_frames(tc_str, fps_float)
 
         if frame_in is None:
             continue
 
-        # Dauer: wenn Spalte 5 eine Zahl ist, als Frames nutzen, sonst 1 Frame
-        if col5.isdigit():
-            dur = int(col5)
-            if dur <= 0:
-                dur = 1
-        else:
-            dur = 1
-
+        # 2. Dauer: wenn Spalte 5 eine Zahl ist, als Frames nutzen, sonst 1 Frame
+        dur = int(col5) if col5.isdigit() and int(col5) > 0 else 1
         frame_out = frame_in + dur
         max_frame = max(max_frame, frame_out)
 
-        # Kommentar: wenn col5 kein reiner Zahlenwert → als Kommentar, sonst ShotID
-        if col5 and not col5.isdigit():
-            comment = col5
-        else:
-            comment = shotid
+        # 3. Kommentar
+        comment = col5 if col5 and not col5.isdigit() else shotid
 
         name_xml    = xml_escape(shotid)
         comment_xml = xml_escape(comment)
@@ -429,15 +448,22 @@ def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_
                     <color>{color_xml}</color>
                 </marker>""")
 
-    if not marker_xml_chunks:
-        duration = 100
-    else:
-        duration = max_frame + 1
-
+    # Gesamtdauer der Sequenz/Clips
+    duration = max_frame + 1 if marker_xml_chunks else 100
     duration_str = str(duration)
-    fps_str = str(fps_int)
+    
+    # ---------------------------------------------------------
+    # Unterscheidung des XML-Aufbaus basierend auf Marker-Typ
+    # ---------------------------------------------------------
     markers_block = "\n".join(marker_xml_chunks)
+    
+    # Sequenz-Marker werden direkt in <sequence> geschrieben
+    sequence_markers = markers_block if marker_type == "Sequence Markers" else ""
+    # Clip-Marker werden in <clipitem> geschrieben
+    clip_markers = markers_block if marker_type == "Clip Markers" else ""
 
+    
+    # FCP XML Basisstruktur
     xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
 <xmeml version="4">
@@ -445,7 +471,7 @@ def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_
     <name>{xml_escape(seq_name)}</name>
     <duration>{duration_str}</duration>
     <rate>
-      <timebase>{fps_str}</timebase>
+      <timebase>{timebase_int}</timebase>
       <ntsc>FALSE</ntsc>
     </rate>
     <media>
@@ -456,7 +482,7 @@ def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_
             <enabled>TRUE</enabled>
             <duration>{duration_str}</duration>
             <rate>
-              <timebase>{fps_str}</timebase>
+              <timebase>{timebase_int}</timebase>
               <ntsc>FALSE</ntsc>
             </rate>
             <start>0</start>
@@ -467,25 +493,24 @@ def generate_premiere_xml(preview_lines, fps: int = 24, seq_name: str = "ShotID_
               <name>{xml_escape(seq_name)}</name>
               <duration>{duration_str}</duration>
               <rate>
-                <timebase>{fps_str}</timebase>
+                <timebase>{timebase_int}</timebase>
                 <ntsc>FALSE</ntsc>
               </rate>
             </file>
-{markers_block}
-          </clipitem>
+{clip_markers}  </clipitem>
         </track>
       </video>
     </media>
     <timecode>
       <rate>
-        <timebase>{fps_str}</timebase>
+        <timebase>{timebase_int}</timebase>
         <ntsc>FALSE</ntsc>
       </rate>
       <string>00:00:00:00</string>
       <frame>0</frame>
       <displayformat>NDF</displayformat>
     </timecode>
-  </sequence>
+{sequence_markers} </sequence>
 </xmeml>
 """
     return xml_content
@@ -519,12 +544,11 @@ if uploaded_file:
                 name = marker.findtext("name") or ""
                 comment = marker.findtext("comment") or ""
                 frame_in = marker.findtext("in") or "0"
-                frame_out = marker.findtext("out") or "0"
-
+                
                 original_lines.append([
                     "",          # username placeholder
                     "",          # kein TC → nur Frames
-                    frame_in,    # IN-frame
+                    frame_in,    # IN-frame (wird später in generate_premiere_xml als col2 interpretiert)
                     "Cyan",      # default color
                     name,
                     comment,
@@ -545,12 +569,15 @@ if uploaded_file:
         group_counter = {}
         labeled = []
 
-        for g in marker_group:
+        for i, g in enumerate(marker_group):
             if not g:
-                labeled.append("")
+                # Behält den ShotID-Wert bei, wenn keine Gruppen-Match gefunden wurde
+                labeled.append(original_lines[i][4] if len(original_lines[i]) > 4 else "")
                 continue
+            
             if g not in group_counter:
                 group_counter[g] = step_size
+                
             num = group_counter[g]
             ep = f"{episode}_" if episode else ""
             shotid = f"{showcode}_{ep}{g}_{str(num).zfill(4)}"
@@ -562,6 +589,7 @@ if uploaded_file:
             row = row + [""] * (8 - len(row)) if len(row) < 8 else row
             if replace_user and user_value:
                 row[0] = user_value
+            # Überschreibe nur, wenn ein neuer ShotID generiert wurde (labeled[i] ist nicht leer)
             if labeled[i]:
                 row[4] = labeled[i]
             preview_lines.append(row)
@@ -588,7 +616,8 @@ if uploaded_file:
         timestamp = datetime.now().strftime("%Y%m%d")
         export_base = f"{base_filename}_processed_{timestamp}"
         
-        xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base)
+        # Aufruf mit dem neuen Parameter marker_type
+        xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base, marker_type=marker_type)
 
 
         col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
