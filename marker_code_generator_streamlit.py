@@ -32,7 +32,7 @@ st.markdown("""
 
     /* Begrenzung der maximalen Breite des Hauptinhalts */
     .main {
-        max-width: 900px; /* Reduziert von 1200px auf 900px */
+        max-width: 900px; /* Breite beibehalten */
         padding: 0 3rem; 
         margin-left: auto;
         margin-right: auto;
@@ -85,6 +85,13 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     
+    /* FIX: Wenn eine preview-card leer ist, blende sie aus. */
+    .preview-card:empty {
+        display: none !important;
+        /* Wichtig: Es kann sein, dass das übergeordnete Element (st.columns) 
+           noch Platz reserviert. Dieser Fix sollte aber die visuelle Störung beheben. */
+    }
+
     .preview-card:hover {
         border-color: rgba(6, 182, 212, 0.5);
         box-shadow: 0 8px 24px rgba(6, 182, 212, 0.2);
@@ -263,8 +270,6 @@ st.markdown("""
 # ---------------------------------------------------------
 # Preview Section
 # ---------------------------------------------------------
-# Hier gab es vorher möglicherweise leere st.markdown() Aufrufe, die die Balken erzeugt haben.
-# Sie wurden hier entfernt, um das Layout direkt auf die Glass-Container folgen zu lassen.
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
