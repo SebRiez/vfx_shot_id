@@ -352,8 +352,8 @@ with colE:
 with colF:
     # Dropdown für den Marker-Typ
     marker_type = st.selectbox(
-        "📍 XML Marker Type",
-        options=["Clip Markers (Standard)", "Sequence Markers"],
+        "📍 XML Marker Type for Premiere Pro",
+        options=["Clip Markers", "Sequence Markers"],
         index=0,
         help="Clip Markers: Markiert den Clip innerhalb einer Sequenz. Sequence Markers: Markiert die Zeitleiste selbst."
     )
