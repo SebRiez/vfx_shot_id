@@ -164,11 +164,18 @@ st.markdown("""
         background: rgba(6, 182, 212, 0.05);
     }
     
-    /* Images */
+    /* Bilder: Skalierung auf 50% und Zentrierung */
     div[data-testid="stImage"] img {
         border-radius: 1rem;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        /* NEU: Bild auf 50% der Spaltenbreite begrenzen */
+        max-width: 50%; 
+        height: auto;
+        display: block; 
+        margin-left: auto; 
+        margin-right: auto; 
     }
     
     /* Dataframes */
@@ -229,7 +236,6 @@ for p in img_paths:
     if os.path.exists(p):
         try:
             img = Image.open(p)
-            img = img.resize((int(img.width * 0.5), int(img.height * 0.5)))
             images.append(img)
         except Exception:
             images.append(None)
@@ -256,7 +262,9 @@ with col1:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
     st.markdown("### ❌ Before")
     if images[0] is not None:
-        st.image(images[0], use_container_width=True)
+        # GEÄNDERT: use_container_width=True entfernt und durch use_column_width=False ersetzt, 
+        # damit das CSS (max-width: 50%) greift.
+        st.image(images[0], use_column_width=False)
     else:
         st.info("Preview image not found")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -265,7 +273,9 @@ with col2:
     st.markdown('<div class="preview-card">', unsafe_allow_html=True)
     st.markdown("### ✅ After")
     if images[1] is not None:
-        st.image(images[1], use_container_width=True)
+        # GEÄNDERT: use_container_width=True entfernt und durch use_column_width=False ersetzt, 
+        # damit das CSS (max-width: 50%) greift.
+        st.image(images[1], use_column_width=False)
     else:
         st.info("Preview image not found")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -501,10 +511,10 @@ if uploaded_file:
                 frame_out = marker.findtext("out") or "0"
 
                 original_lines.append([
-                    "",         # username placeholder
-                    "",         # kein TC → nur Frames
-                    frame_in,   # IN-frame
-                    "Cyan",     # default color
+                    "",          # username placeholder
+                    "",          # kein TC → nur Frames
+                    frame_in,    # IN-frame
+                    "Cyan",      # default color
                     name,
                     comment,
                     "", ""
