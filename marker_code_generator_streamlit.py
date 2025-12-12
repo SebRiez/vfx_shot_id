@@ -678,5 +678,5 @@ if uploaded_file:
 
 else:
     st.markdown('<div class="glass-container">', unsafe_allow_html=True)
-    st.info("📤 Please upload a marker Avid txt or Premiere XML file to begin processing.")
+    st.info("📤 Please upload an Avid marker .txt or Premiere XML file to begin processing.")
     st.markdown('</div>', unsafe_allow_html=True)
