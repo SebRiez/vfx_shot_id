@@ -296,7 +296,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="glass-container">', unsafe_allow_html=True)
 st.markdown("### 📁 Upload Marker File")
 uploaded_file = st.file_uploader(
-    "Choose a TXT or XML file",
+    "Choose an Avid TXT or PremierePro XML file",
     type=["txt", "xml"],
     help="Upload your marker file from your editing software"
 )
