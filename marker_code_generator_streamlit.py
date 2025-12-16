@@ -623,50 +623,64 @@ if uploaded_file:
             preview_lines.append(row)
 
 
-        # ---------------------------------------------------------
-        # PREVIEW + EXPORT DOWNLOAD BUTTONS (Unchanged)
-        # ---------------------------------------------------------
-        st.markdown("### 📊 Data Preview")
-        tab1, tab2 = st.tabs(["📋 Original Data", "✨ Processed Data"])
-        with tab1:
-            st.dataframe(original_lines, use_container_width=True)
-        with tab2:
-            st.dataframe(preview_lines, use_container_width=True)
+# ... (nach der Preview-Schleife)
 
-        st.markdown("---")
-        st.markdown("### ⬇️ Export Options")
+            st.markdown("---")
+            st.markdown("### ⬇️ Export Settings & Download")
 
-        # Daten für den Download generieren
-        df = pd.DataFrame(preview_lines)
-        txt = "\n".join(["\t".join(r) for r in preview_lines])
-        csv_c = df.to_csv(index=False)
-        csv_s = df.to_csv(index=False, sep=";")
+            # --- DATEINAME ABFRAGE ---
+            timestamp = datetime.now().strftime("%Y%m%d")
+            default_export_name = f"{base_filename}_processed_{timestamp}"
+            
+            # Das Textfeld erlaubt dem User, den Namen anzupassen
+            custom_export_name = st.text_input(
+                "📁 Filename for Export (without extension):", 
+                value=default_export_name,
+                help="The extension (.txt, .xml, etc.) will be added automatically."
+            ).strip()
 
-        timestamp = datetime.now().strftime("%Y%m%d")
-        export_base = f"{base_filename}_processed_{timestamp}"
-        
-        # XML-Export
-        xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=export_base, marker_type=marker_type)
+            # Fallback falls der User das Feld komplett leert
+            final_filename = custom_export_name if custom_export_name else default_export_name
 
-        col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
+            # Daten für den Download generieren
+            df = pd.DataFrame(preview_lines)
+            txt = "\n".join(["\t".join(r) for r in preview_lines])
+            csv_c = df.to_csv(index=False)
+            csv_s = df.to_csv(index=False, sep=";")
 
-        with col_dl1:
-            st.download_button("📥 TXT", txt, file_name=f"{export_base}.txt", use_container_width=True)
+            # XML-Exporte generieren (verwenden nun den gewählten Namen intern in der XML)
+            premiere_xml_content = generate_premiere_xml(preview_lines, fps=timebase, seq_name=final_filename, marker_type=marker_type)
+            avid_xml_content = generate_avid_xml(preview_lines, seq_name=final_filename)
 
-        with col_dl2:
-            st.download_button("📥 CSV (,)", csv_c, file_name=f"{export_base}_comma.csv", use_container_width=True)
+            # Download Buttons mit dem dynamischen Namen
+            col_dl1, col_dl2, col_dl3, col_dl4, col_dl5 = st.columns(5) 
 
-        with col_dl3:
-            st.download_button("📥 CSV (;)", csv_s, file_name=f"{export_base}_semicolon.csv", use_container_width=True)
+            with col_dl1:
+                st.download_button("📥 TXT", txt, file_name=f"{final_filename}.txt", use_container_width=True)
 
-        with col_dl4:
-            st.download_button(
-                "📥 Premiere XML",
-                xml_content,
-                file_name=f"{export_base}_PremiereMarkers.xml",
-                mime="application/xml",
-                use_container_width=True
-            )
+            with col_dl2:
+                st.download_button("📥 CSV (,)", csv_c, file_name=f"{final_filename}_comma.csv", use_container_width=True)
+
+            with col_dl3:
+                st.download_button("📥 CSV (;)", csv_s, file_name=f"{final_filename}_semicolon.csv", use_container_width=True)
+
+            with col_dl4:
+                st.download_button(
+                    "📥 Premiere XML",
+                    premiere_xml_content,
+                    file_name=f"{final_filename}_Premiere.xml",
+                    mime="application/xml",
+                    use_container_width=True
+                )
+            
+            with col_dl5:
+                 st.download_button(
+                    "📥 Avid XML",
+                    avid_xml_content,
+                    file_name=f"{final_filename}_Avid.xml",
+                    mime="application/xml",
+                    use_container_width=True
+                )
 
         st.success("✅ Processing complete! Download your files above.")
         
